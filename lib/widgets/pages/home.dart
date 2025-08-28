@@ -7,13 +7,23 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ironeye Dashcam'),
-        centerTitle: true,
+        // title: const 
+        title: const Text(
+          'Home',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+          ),
+        ),
+        centerTitle: false,
       ),
       body: const Center(
         child: Text(
-          'Home Screen',
-          style: TextStyle(fontSize: 24),
+          'Welcome to Ironeye Dashcam',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );

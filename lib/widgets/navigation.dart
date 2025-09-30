@@ -30,32 +30,49 @@ class Navigation extends StatelessWidget {
         currentIndex: currentIndex.index,
         onTap: onTap,
         backgroundColor: bgBlack,
-        iconSize: 24.0,
+        iconSize: 22.0,
         selectedItemColor: selectedItemColor,
-        unselectedFontSize: 12.0,
-        selectedFontSize: 12.0,
+        unselectedItemColor: Colors.grey,
+        unselectedFontSize: 11.0,
+        selectedFontSize: 11.0,
         enableFeedback: false,
         landscapeLayout: BottomNavigationBarLandscapeLayout.spread,
         type: BottomNavigationBarType.fixed,
-      items: const [
+        elevation: 0,
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_sharp),
+          icon: Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Icon(Icons.home_sharp),
+          ),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.videocam),
+          icon: Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Icon(Icons.videocam),
+          ),
           label: 'Live View',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.play_circle),
+          icon: Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Icon(Icons.play_circle),
+          ),
           label: 'Recordings',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
+          icon: Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Icon(Icons.settings),
+          ),
           label: 'Settings',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.receipt_long),
+          icon: Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Icon(Icons.receipt_long),
+          ),
           label: 'Logs',
         ),
       ],

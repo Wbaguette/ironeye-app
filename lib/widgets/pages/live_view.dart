@@ -113,7 +113,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
       _controller.loadRequest(Uri.parse(config.webrtcUrl!));
       
     } catch (e) {
-      debugPrint('Error during refresh: $e');
       setState(() {
         _isLoading = false;
         _hasError = true;

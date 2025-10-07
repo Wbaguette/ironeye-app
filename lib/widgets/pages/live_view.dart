@@ -16,7 +16,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
   bool _hasError = false; 
   String? _errorMessage; // Error message to display (config error or web view error)
 
-
   @override
   void initState() {
     super.initState();
@@ -70,8 +69,11 @@ class _LiveViewPageState extends State<LiveViewPage> {
             setState(() {
               _isLoading = false;
               _hasError = true;
-              _errorMessage = _cleanErrorMessage(error.description);
+              _errorMessage = _cleanErrorMessage('${error.description} (${error.errorCode})');
             });
+          },
+          onNavigationRequest: (NavigationRequest request) {
+            return NavigationDecision.navigate;
           },
         ),
       );
@@ -85,8 +87,13 @@ class _LiveViewPageState extends State<LiveViewPage> {
       return;
     }
     
+    // Debug: Print the URL being loaded
+    debugPrint('Loading WebRTC URL: ${config.webrtcUrl}');
+    
     // There should be no error thrown here, config takes care of it
-    controller.loadRequest(Uri.parse(config.webrtcUrl!));
+    controller.loadRequest(
+      Uri.parse(config.webrtcUrl!),
+    );
     
     _controller = controller;
   }
@@ -110,7 +117,9 @@ class _LiveViewPageState extends State<LiveViewPage> {
       
       _controller.clearCache();
       _controller.clearLocalStorage();
-      _controller.loadRequest(Uri.parse(config.webrtcUrl!));
+      _controller.loadRequest(
+        Uri.parse(config.webrtcUrl!),
+      );
       
     } catch (e) {
       setState(() {

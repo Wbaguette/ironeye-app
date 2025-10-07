@@ -3,7 +3,6 @@ import 'package:dashcamapp/widgets/navigation.dart';
 import 'package:dashcamapp/widgets/pages/home.dart';
 import 'package:dashcamapp/widgets/pages/live_view.dart';
 import 'package:dashcamapp/widgets/pages/recordings.dart';
-import 'package:dashcamapp/widgets/pages/settings.dart';
 import 'package:dashcamapp/widgets/pages/logs.dart';
 
 class MainContainer extends StatefulWidget {
@@ -20,7 +19,6 @@ class _MainContainerState extends State<MainContainer> {
     const HomePage(),
     const LiveViewPage(),
     const RecordingsPage(),
-    const SettingsPage(),
     const LogsPage(),
   ];
 

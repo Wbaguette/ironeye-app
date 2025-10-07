@@ -42,7 +42,6 @@ dependencies:
   wifi_scan: ^0.4.1
   permission_handler: ^11.0.1
 
-
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_test:

@@ -5,7 +5,6 @@ enum PageIndex {
   home,
   liveView,
   recordings,
-  settings,
   logs,
 }
 
@@ -60,13 +59,6 @@ class Navigation extends StatelessWidget {
             child: Icon(Icons.play_circle),
           ),
           label: 'Recordings',
-        ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Icon(Icons.settings),
-          ),
-          label: 'Settings',
         ),
         BottomNavigationBarItem(
           icon: Padding(

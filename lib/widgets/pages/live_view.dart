@@ -78,21 +78,8 @@ class _LiveViewPageState extends State<LiveViewPage> {
         ),
       );
       
-    if (config.hasError) {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-        _errorMessage = _cleanErrorMessage(config.errorMessage!);
-      });
-      return;
-    }
-    
-    // Debug: Print the URL being loaded
-    debugPrint('Loading WebRTC URL: ${config.webrtcUrl}');
-    
-    // There should be no error thrown here, config takes care of it
     controller.loadRequest(
-      Uri.parse(config.webrtcUrl!),
+      Uri.parse(config.webrtcUrl),
     );
     
     _controller = controller;
@@ -106,19 +93,11 @@ class _LiveViewPageState extends State<LiveViewPage> {
     });
     
     try {
-      if (config.hasError) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-          _errorMessage = _cleanErrorMessage(config.errorMessage!);
-        });
-        return;
-      }
-      
+      // Configuration is guaranteed to be valid at this point
       _controller.clearCache();
       _controller.clearLocalStorage();
       _controller.loadRequest(
-        Uri.parse(config.webrtcUrl!),
+        Uri.parse(config.webrtcUrl),
       );
       
     } catch (e) {

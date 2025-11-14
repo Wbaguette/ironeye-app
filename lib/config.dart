@@ -58,11 +58,14 @@ class Config {
     }
   }
   
-  // TODO: Need right date formatting 
   String buildPlaybackUrl({required String start, required String end}) {
-    return playbackUrl
+    final baseUrl = playbackUrl
         .replaceAll('[start]', start)
         .replaceAll('[end]', end);
+    
+    // Add duration parameter
+    final separator = baseUrl.contains('?') ? '&' : '?';
+    return '$baseUrl${separator}duration=60';
   }
 }
 

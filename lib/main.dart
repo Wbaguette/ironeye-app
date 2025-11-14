@@ -3,9 +3,17 @@ import 'package:dashcamapp/widgets/main_container.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_downloader/flutter_downloader.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // if (!kIsWeb) {
+    // await FlutterDownloader.initialize(
+    //   debug: kDebugMode,
+    //   ignoreSsl: true,
+    // );
+  // }
   
   try {
     await dotenv.load(fileName: ".env");

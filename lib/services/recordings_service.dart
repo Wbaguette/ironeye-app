@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:dashcamapp/config.dart';
 import 'package:dashcamapp/utils/date_utils.dart' as date_utils;
+import 'package:dashcamapp/services/log_service.dart';
 
 class RecordingsService {
   
@@ -18,7 +19,6 @@ class RecordingsService {
       final startRFC3339 = date_utils.DateUtils.toRFC3339(startOfDay);
       final endRFC3339 = date_utils.DateUtils.toRFC3339(endOfDay);
       
-      // URL encode the parameters
       final encodedStart = Uri.encodeComponent(startRFC3339);
       final encodedEnd = Uri.encodeComponent(endRFC3339);
       
@@ -39,14 +39,41 @@ class RecordingsService {
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         final recordings = jsonData.map((json) => Recording.fromJson(json)).toList();
+        
+        await LogService.log(
+          level: LogLevel.info,
+          category: LogCategory.recordings,
+          title: 'Recordings fetched successfully',
+          details: 'Found ${recordings.length} recordings for ${date.toLocal().toString().split(' ')[0]}',
+          metadata: {'count': recordings.length, 'date': date.toIso8601String()},
+        );
+        
         return recordings;
       } else if (response.statusCode == 404) {
-        // No recordings found for this date
+        await LogService.log(
+          level: LogLevel.info,
+          category: LogCategory.recordings,
+          title: 'No recordings found',
+          details: 'No recordings available for ${date.toLocal().toString().split(' ')[0]}',
+        );
         return [];
       } else {
+        await LogService.log(
+          level: LogLevel.error,
+          category: LogCategory.recordings,
+          title: 'Failed to fetch recordings',
+          details: 'HTTP ${response.statusCode}',
+          metadata: {'statusCode': response.statusCode},
+        );
         throw Exception('Failed to fetch recordings: ${response.statusCode}');
       }
     } catch (e) {
+      await LogService.log(
+        level: LogLevel.error,
+        category: LogCategory.network,
+        title: 'Network error fetching recordings',
+        details: e.toString(),
+      );
       throw Exception('Network error: $e');
     }
   }
@@ -85,8 +112,25 @@ class RecordingsService {
     required double durationSeconds,
   }) async {
     if (kIsWeb) {
+      await LogService.log(
+        level: LogLevel.warning,
+        category: LogCategory.recordings,
+        title: 'Download not supported',
+        details: 'Downloads are only supported on mobile platforms',
+      );
       throw Exception('Downloads are only supported on mobile platforms');
     }
+    
+    await LogService.log(
+      level: LogLevel.info,
+      category: LogCategory.recordings,
+      title: 'Download started',
+      details: 'Starting download: ${durationSeconds.round()}s segment at ${offsetSeconds.round()}s offset',
+      metadata: {
+        'offsetSeconds': offsetSeconds,
+        'durationSeconds': durationSeconds,
+      },
+    );
     
     try {
       final customUrl = recording.getCustomDownloadUrl(
@@ -144,14 +188,49 @@ class RecordingsService {
         throw Exception('File was not saved successfully');
       }
       
+      await LogService.log(
+        level: LogLevel.info,
+        category: LogCategory.recordings,
+        title: 'Download completed',
+        details: 'Successfully downloaded ${(response.bodyBytes.length / 1024 / 1024).toStringAsFixed(2)} MB',
+        metadata: {
+          'fileName': fileName,
+          'sizeBytes': response.bodyBytes.length,
+        },
+      );
+      
       return filePath;
     } on SocketException {
+      await LogService.log(
+        level: LogLevel.error,
+        category: LogCategory.network,
+        title: 'Download failed',
+        details: 'No internet connection',
+      );
       throw Exception('No internet connection');
     } on TimeoutException {
+      await LogService.log(
+        level: LogLevel.error,
+        category: LogCategory.recordings,
+        title: 'Download timed out',
+        details: 'Connection timed out after 5 minutes',
+      );
       throw Exception('Connection timed out');
     } on FormatException {
+      await LogService.log(
+        level: LogLevel.error,
+        category: LogCategory.recordings,
+        title: 'Download failed',
+        details: 'Invalid URL format',
+      );
       throw Exception('Invalid URL format');
     } catch (e) {
+      await LogService.log(
+        level: LogLevel.error,
+        category: LogCategory.recordings,
+        title: 'Download failed',
+        details: e.toString(),
+      );
       if (e is Exception) {
         rethrow;
       }

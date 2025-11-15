@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:dashcamapp/services/recordings_service.dart';
+import 'package:dashcamapp/services/log_service.dart';
 
 class RecordingsPage extends StatefulWidget {
   const RecordingsPage({super.key});
@@ -36,8 +38,19 @@ class _RecordingsPageState extends State<RecordingsPage> {
     });
 
     try {
-      final recordings = await RecordingsService.fetchRecordingsForDate(_selectedDate);
+      var recordings = await RecordingsService.fetchRecordingsForDate(_selectedDate);
       if (!mounted) return;
+      
+      // Cap recordings list to prevent memory issues
+      if (recordings.length > 1000) {
+        recordings = recordings.take(1000).toList();
+        LogService.log(
+          level: LogLevel.warning,
+          category: LogCategory.system,
+          title: 'Recordings list truncated',
+          details: 'Recording list exceeded 1000 entries and was truncated',
+        );
+      }
       
       setState(() {
         _recordings = recordings;
@@ -77,6 +90,12 @@ class _RecordingsPageState extends State<RecordingsPage> {
       setState(() {
         _selectedDate = picked;
       });
+      await LogService.log(
+        level: LogLevel.info,
+        category: LogCategory.recordings,
+        title: 'Date selected',
+        details: 'User selected ${picked.toLocal().toString().split(' ')[0]}',
+      );
       _fetchRecordings();
     }
   }
@@ -114,12 +133,13 @@ class _RecordingsPageState extends State<RecordingsPage> {
       return;
     }
     
-    // Show custom download options dialog
     final Map<String, dynamic>? downloadConfig = await _showCustomDownloadDialog(recording);
-    if (downloadConfig == null) return;
+    if (downloadConfig == null || !mounted) return;
 
+    // Store context before async operations
+    final scaffoldContext = context;
+    
     try {
-      // Show progress dialog
       if (mounted) { 
         showDialog(
           context: context,
@@ -208,24 +228,44 @@ class _RecordingsPageState extends State<RecordingsPage> {
       );
       
       if (mounted) {
-        Navigator.of(context).pop(); // Close progress dialog
+        Navigator.of(scaffoldContext).pop(); 
         
-        // Share the file (allows saving to Files app on iOS)
-        await Share.shareXFiles(
-          [XFile(filePath, mimeType: 'video/mp4')],
+        LogService.log(
+          level: LogLevel.info,
+          category: LogCategory.recordings,
+          title: 'Recording shared',
+          details: 'User shared recording segment (${durationSeconds.round()}s)',
+          metadata: {
+            'offsetSeconds': offsetSeconds,
+            'durationSeconds': durationSeconds,
+          },
         );
+        
+        try {
+          await Share.shareXFiles(
+            [XFile(filePath, mimeType: 'video/mp4')],
+          );
+        } finally {
+          // Clean up temp file after sharing
+          try {
+            final file = File(filePath);
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.of(context).pop(); // Close progress dialog
+        Navigator.of(scaffoldContext).pop(); 
         
-        // Extract clean error message
         String errorMessage = e.toString().replaceFirst('Exception: ', '');
         if (errorMessage.contains('Custom download error:')) {
           errorMessage = errorMessage.replaceFirst('Custom download error: ', '');
         }
         
-        // Show error dialog
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -246,7 +286,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    _downloadRecording(recording); // Retry
+                    _downloadRecording(recording); 
                   },
                   child: const Text('Retry'),
                 ),

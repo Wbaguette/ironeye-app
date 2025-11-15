@@ -1,5 +1,6 @@
 import 'package:dashcamapp/config.dart';
 import 'package:dashcamapp/widgets/main_container.dart';
+import 'package:dashcamapp/services/log_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -19,12 +20,36 @@ void main() async {
     await dotenv.load(fileName: ".env");
     final _ = config; 
     
+    // Log app startup
+    await LogService.log(
+      level: LogLevel.info,
+      category: LogCategory.system,
+      title: 'App started',
+      details: 'Ironeye Dashcam app initialized successfully',
+      metadata: {'platform': defaultTargetPlatform.toString()},
+    );
+    
     runApp(const IroneyeApp());
   } catch (e) {
+    // Log configuration error (with try-catch to prevent infinite errors)
+    try {
+      await LogService.log(
+        level: LogLevel.error,
+        category: LogCategory.system,
+        title: 'App initialization failed',
+        details: 'Configuration error: $e',
+      );
+    } catch (_) {
+      // Ignore logging errors during initialization failure
+    }
+    
     if (kDebugMode) {
       runApp(ConfigErrorApp(error: e.toString()));
     } else {
-      throw Exception('Configuration validation failed: $e');
+      // Show user-friendly error in release builds
+      runApp(ConfigErrorApp(
+        error: 'Unable to start application. Please check your internet connection and try again.\n\nIf the problem persists, please contact support.',
+      ));
     }
   }
 }

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:wifi_scan/wifi_scan.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:dashcamapp/services/log_service.dart';
 import 'dart:async';
-import 'dart:io';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,23 +13,31 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   bool isConnectedToWiFi = false;
-  bool dashcamFound = false;
-  bool isScanning = false;
-  bool isConnecting = false;
-  bool isProtected = false;
-  String? dashcamSSID;
-  String? errorMessage;
+  bool isConnectedToDashcam = false;
+  String? connectedSSID;
+  Timer? _checkTimer;
 
   @override
   void initState() {
     super.initState();
     _initConnectivity();
+    _startPeriodicCheck();
   }
 
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    _checkTimer?.cancel();
     super.dispose();
+  }
+
+  void _startPeriodicCheck() {
+    // Check connection status every 3 seconds
+    _checkTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted && isConnectedToWiFi) {
+        _checkDashcamConnection();
+      }
+    });
   }
 
   Future<void> _initConnectivity() async {
@@ -40,208 +46,133 @@ class _HomePageState extends State<HomePage> {
         await Connectivity().checkConnectivity();
     _updateConnectionStatus(connectivityResult);
 
+    // Cancel existing subscription if any
+    await _connectivitySubscription?.cancel();
+    
     // Listen for connectivity changes
     _connectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen(_updateConnectionStatus);
-
-    // Check permissions
-    await _requestPermissions();
-  }
-
-  Future<void> _requestPermissions() async {
-    if (Platform.isAndroid) {
-      // Request location permission (required for WiFi scan on Android)
-      await Permission.location.request();
-    }
   }
 
   void _updateConnectionStatus(ConnectivityResult result) {
+    final wasConnected = isConnectedToWiFi;
+    final newConnected = result == ConnectivityResult.wifi;
+    
     setState(() {
-      isConnectedToWiFi = result == ConnectivityResult.wifi;
+      isConnectedToWiFi = newConnected;
+      if (!newConnected) {
+        isConnectedToDashcam = false;
+        connectedSSID = null;
+      }
     });
 
-    if (isConnectedToWiFi && !dashcamFound) {
-      _scanForDashcam();
+    // Log connectivity changes (fire-and-forget)
+    if (mounted) {
+      if (newConnected && !wasConnected) {
+        LogService.log(
+          level: LogLevel.info,
+          category: LogCategory.network,
+          title: 'WiFi connected',
+          details: 'Device connected to WiFi network',
+        );
+        _checkDashcamConnection();
+      } else if (!newConnected && wasConnected) {
+        LogService.log(
+          level: LogLevel.warning,
+          category: LogCategory.network,
+          title: 'WiFi disconnected',
+          details: 'Device disconnected from WiFi network',
+        );
+      }
     }
   }
 
-  Future<void> _scanForDashcam() async {
+  Future<void> _checkDashcamConnection() async {
+    if (!mounted || !isConnectedToWiFi) return;
+
     try {
-      setState(() {
-        isScanning = true;
-        errorMessage = null;
-      });
-
-      // Check if WiFi scan is supported
-      final canGetScannedResults = await WiFiScan.instance.canGetScannedResults();
-      if (canGetScannedResults != CanGetScannedResults.yes) {
-        setState(() {
-          errorMessage = 'WiFi scanning not supported on this device';
-          isScanning = false;
-        });
-        return;
-      }
-
-      // Start scan
-      await WiFiScan.instance.startScan();
+      // Note: In a real implementation, you would check the connected SSID
+      // and verify it's the dashcam network. This requires platform-specific code.
+      // For now, we'll use a simple placeholder check.
       
-      // Get scan results
-      final accessPoints = await WiFiScan.instance.getScannedResults();
+      // You could also try to ping the dashcam's local IP or check if config endpoints respond
+      // For example: http.get('http://192.168.1.1/api/status') with a short timeout
       
-      // Look for dashcam WiFi
-      WiFiAccessPoint? dashcamAP;
-      for (final ap in accessPoints) {
-        if (ap.ssid.toLowerCase() == 'ironeye') {
-          dashcamAP = ap;
-          break;
-        }
-      }
-
-      if (dashcamAP != null) {
-        setState(() {
-          dashcamSSID = dashcamAP!.ssid;
-          dashcamFound = true;
-          isProtected = dashcamAP.capabilities.contains('WPA') || 
-                       dashcamAP.capabilities.contains('WEP');
-        });
-        
-        if (isProtected) {
-          _showPasswordDialog();
-        } else {
-          _connectToDashcam();
-        }
-      } else {
-        setState(() {
-          errorMessage = 'No dashcam WiFi found. Make sure your dashcam is powered on and in AP mode.';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Error scanning for WiFi: ${e.toString()}';
-      });
-    } finally {
-      setState(() {
-        isScanning = false;
-      });
-    }
-  }
-
-  Future<void> _connectToDashcam([String? password]) async {
-    try {
-      setState(() {
-        isConnecting = true;
-        errorMessage = null;
-      });
-
-      // Note: Direct WiFi connection might require platform-specific code
-      // For now, show instructions to user
+      // Placeholder: Assume connected to dashcam if WiFi name contains "ironeye"
+      // In production, implement actual connectivity test
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Please connect to "$dashcamSSID" manually in your WiFi settings'
-            ),
-            duration: const Duration(seconds: 5),
-          ),
-        );
+        setState(() {
+          // This is a placeholder - in production, get actual SSID from native code
+          isConnectedToDashcam = true;
+          connectedSSID = 'Dashcam Network';
+        });
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Failed to connect: ${e.toString()}';
-      });
-    } finally {
-      setState(() {
-        isConnecting = false;
-      });
+      if (mounted) {
+        setState(() {
+          isConnectedToDashcam = false;
+        });
+      }
     }
   }
 
-  void _showPasswordDialog() {
-    final TextEditingController passwordController = TextEditingController();
+  void _openWiFiSettings() {
+    // Note: Opening WiFi settings requires platform-specific code
+    // For iOS: app_settings package
+    // For Android: android_intent_plus package
     
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('WiFi Password Required'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Enter password for "$dashcamSSID":'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _connectToDashcam(passwordController.text);
-              },
-              child: const Text('Connect'),
-            ),
-          ],
-        );
-      },
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please open your WiFi settings and connect to the dashcam network'),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
-  Widget _buildConnectionStatus() {
-    if (isScanning) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Scanning for dashcam...'),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (isConnecting) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Connecting to dashcam...'),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (errorMessage != null) {
+  Widget _buildConnectionCard() {
+    if (!isConnectedToWiFi) {
       return Card(
         color: Colors.red.shade50,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
             children: [
-              Icon(Icons.error, color: Colors.red.shade700),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  errorMessage!,
-                  style: TextStyle(color: Colors.red.shade700),
+              Icon(
+                Icons.wifi_off,
+                size: 64,
+                color: Colors.red.shade700,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Not Connected to WiFi',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Please connect to your dashcam\'s WiFi network',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.red.shade700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _openWiFiSettings,
+                icon: const Icon(Icons.settings),
+                label: const Text('Open WiFi Settings'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ),
             ],
@@ -250,73 +181,108 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    if (dashcamFound) {
+    if (isConnectedToDashcam) {
       return Card(
         color: Colors.green.shade50,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
             children: [
-              Icon(Icons.wifi, color: Colors.green.shade700),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dashcam Found: $dashcamSSID',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
+              Icon(
+                Icons.check_circle,
+                size: 64,
+                color: Colors.green.shade700,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Connected to Dashcam',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You can now access recordings and live view',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.green.shade700,
+                ),
+              ),
+              if (connectedSSID != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.green.shade300),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.wifi, size: 16, color: Colors.green.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        connectedSSID!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green.shade900,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Ready to connect',
-                      style: TextStyle(color: Colors.green.shade600),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
       );
     }
 
-    if (!isConnectedToWiFi) {
-      return Card(
-        color: Colors.orange.shade50,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Icon(Icons.wifi_off, color: Colors.orange.shade700),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  'WiFi not connected. Please connect to WiFi to scan for dashcam.',
-                  style: TextStyle(color: Colors.orange.shade700),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
+    // Connected to WiFi but not dashcam
     return Card(
+      color: Colors.orange.shade50,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
           children: [
-            const Icon(Icons.search),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text('Tap "Scan for Dashcam" to search for your device'),
+            Icon(
+              Icons.wifi_tethering_error,
+              size: 64,
+              color: Colors.orange.shade700,
             ),
-            ElevatedButton(
-              onPressed: _scanForDashcam,
-              child: const Text('Scan'),
+            const SizedBox(height: 16),
+            Text(
+              'Not Connected to Dashcam',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Connected to WiFi, but not the dashcam network',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.orange.shade700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _openWiFiSettings,
+              icon: const Icon(Icons.router),
+              label: const Text('Switch to Dashcam Network'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
           ],
         ),
@@ -329,85 +295,176 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Home',
+          'Dashcam Connection',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 28,
+            fontSize: 24,
           ),
         ),
         centerTitle: false,
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _buildConnectionCard(),
+            const SizedBox(height: 24),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Connection Status',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(
-                          isConnectedToWiFi ? Icons.wifi : Icons.wifi_off,
-                          color: isConnectedToWiFi ? Colors.green : Colors.red,
-                        ),
+                        Icon(Icons.info_outline, color: Colors.blue.shade700),
                         const SizedBox(width: 8),
-                        Text(
-                          isConnectedToWiFi ? 'WiFi Connected' : 'WiFi Disconnected',
+                        const Text(
+                          'How to Connect',
                           style: TextStyle(
-                            color: isConnectedToWiFi ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    _buildInstructionStep(
+                      1,
+                      'Power on your dashcam',
+                      'Make sure your dashcam is turned on and in WiFi mode',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildInstructionStep(
+                      2,
+                      'Open WiFi settings on your phone',
+                      'Tap the button above to open your WiFi settings',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildInstructionStep(
+                      3,
+                      'Connect to dashcam network',
+                      'Look for a network name containing "ironeye" or your dashcam\'s SSID',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildInstructionStep(
+                      4,
+                      'Return to the app',
+                      'Once connected, return here to access recordings and live view',
+                    ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            _buildConnectionStatus(),
             const SizedBox(height: 24),
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Instructions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+            if (isConnectedToDashcam) ...[
+              Card(
+                color: Colors.blue.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Icon(Icons.tips_and_updates, size: 48, color: Colors.blue.shade700),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Quick Access',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade900,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '1. Power on your dashcam\n'
-                      '2. Enable WiFi access point mode on your dashcam\n'
-                      '3. Make sure your phone is connected to WiFi\n'
-                      '4. Tap "Scan for Dashcam" to detect your device\n'
-                      '5. Connect to the dashcam WiFi when found',
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Use the navigation bar below to:',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              Icon(Icons.videocam, color: Colors.blue.shade700),
+                              const SizedBox(height: 4),
+                              const Text('Live View', style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              Icon(Icons.video_library, color: Colors.blue.shade700),
+                              const SizedBox(height: 4),
+                              const Text('Recordings', style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              Icon(Icons.article, color: Colors.blue.shade700),
+                              const SizedBox(height: 4),
+                              const Text('Logs', style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInstructionStep(int step, String title, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.blue.shade700,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              '$step',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -91,5 +91,4 @@ class ConfigurationException implements Exception {
   String toString() => 'ConfigurationException: $message';
 }
 
-// Global configuration instance - will throw if configuration is invalid
 final config = Config.create();

@@ -27,7 +27,6 @@ class LogEntry {
         metadata: json['metadata'] as Map<String, dynamic>?,
       );
     } catch (e) {
-      // Return a fallback entry if parsing fails
       return LogEntry(
         timestamp: DateTime.now(),
         level: LogLevel.error,
@@ -53,17 +52,6 @@ class LogEntry {
     'details': details,
     'metadata': metadata,
   };
-
-  String get levelIcon {
-    switch (level) {
-      case LogLevel.info:
-        return '🟢';
-      case LogLevel.warning:
-        return '🟡';
-      case LogLevel.error:
-        return '🔴';
-    }
-  }
 
   String get categoryName {
     switch (category) {
@@ -195,21 +183,5 @@ class LogService {
 
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert(jsonData);
-  }
-
-  static Future<Map<String, int>> getLogStats() async {
-    final logs = await getLogs();
-
-    return {
-      'total': logs.length,
-      'info': logs.where((l) => l.level == LogLevel.info).length,
-      'warning': logs.where((l) => l.level == LogLevel.warning).length,
-      'error': logs.where((l) => l.level == LogLevel.error).length,
-      'recordings': logs
-          .where((l) => l.category == LogCategory.recordings)
-          .length,
-      'network': logs.where((l) => l.category == LogCategory.network).length,
-      'system': logs.where((l) => l.category == LogCategory.system).length,
-    };
   }
 }

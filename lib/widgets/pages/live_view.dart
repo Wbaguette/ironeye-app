@@ -6,7 +6,6 @@ import 'package:dashcamapp/config.dart';
 
 enum LiveViewErrorType {
   networkConnection,
-  authentication,
   streamNotAvailable,
   configurationError,
   webViewError,
@@ -69,16 +68,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
         message: "Can't connect to camera",
         technicalDetails: '${error.description} (${error.errorCode})',
         isRetryable: true,
-      );
-    }
-
-    // Authentication errors
-    if (error.errorCode == 401 || error.errorCode == 403) {
-      return const LiveViewError(
-        type: LiveViewErrorType.authentication,
-        message: 'Camera access denied',
-        technicalDetails: 'Check camera credentials',
-        isRetryable: false,
       );
     }
 
@@ -189,8 +178,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
     switch (type) {
       case LiveViewErrorType.networkConnection:
         return Icons.wifi_off;
-      case LiveViewErrorType.authentication:
-        return Icons.lock;
       case LiveViewErrorType.streamNotAvailable:
         return Icons.videocam_off;
       case LiveViewErrorType.configurationError:
@@ -206,8 +193,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
     switch (type) {
       case LiveViewErrorType.networkConnection:
         return warningOrange;
-      case LiveViewErrorType.authentication:
-        return errorRed;
       case LiveViewErrorType.streamNotAvailable:
         return warningOrange;
       case LiveViewErrorType.configurationError:
@@ -227,26 +212,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
           title: const Text('Network Diagnostics'),
           content: const Text(
             'Check your network connection and ensure the camera URL is accessible.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Camera Settings'),
-          content: const Text(
-            'Please check camera credentials and permissions in the settings.',
           ),
           actions: [
             TextButton(
@@ -295,13 +260,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
               child: const Text('Network Diagnostics'),
             ),
           ],
-        );
-
-      case LiveViewErrorType.authentication:
-        return ElevatedButton.icon(
-          onPressed: _showSettingsDialog,
-          icon: const Icon(Icons.settings),
-          label: const Text('Check Settings'),
         );
 
       case LiveViewErrorType.streamNotAvailable:

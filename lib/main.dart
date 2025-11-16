@@ -5,23 +5,14 @@ import 'package:dashcamapp/services/log_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-// import 'package:flutter_downloader/flutter_downloader.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // if (!kIsWeb) {
-  // await FlutterDownloader.initialize(
-  //   debug: kDebugMode,
-  //   ignoreSsl: true,
-  // );
-  // }
 
   try {
     await dotenv.load();
     final _ = config;
 
-    // Log app startup
     await LogService.log(
       level: LogLevel.info,
       category: LogCategory.system,
@@ -32,7 +23,6 @@ void main() async {
 
     runApp(const IroneyeApp());
   } catch (e) {
-    // Log configuration error (with try-catch to prevent infinite errors)
     try {
       await LogService.log(
         level: LogLevel.error,
@@ -47,7 +37,6 @@ void main() async {
     if (kDebugMode) {
       runApp(ConfigErrorApp(error: e.toString()));
     } else {
-      // Show user-friendly error in release builds
       runApp(
         const ConfigErrorApp(
           error:

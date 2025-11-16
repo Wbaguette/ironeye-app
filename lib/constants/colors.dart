@@ -1,3 +1,5 @@
+// Color constants for consistency and reuse
+
 import 'package:flutter/material.dart';
 
 final Color bgBlack = Colors.black87;

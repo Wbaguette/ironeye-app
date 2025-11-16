@@ -176,7 +176,6 @@ class _LogsPageState extends State<LogsPage>
       ),
       body: Column(
         children: [
-          // Search bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -209,7 +208,6 @@ class _LogsPageState extends State<LogsPage>
             ),
           ),
 
-          // Logs list
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())

@@ -4,15 +4,24 @@ class DateUtils {
   
   /// Converts a DateTime to RFC3339 format for API calls
   static String toRFC3339(DateTime dateTime) {
-    // Format with local timezone and microseconds
-    // Example: 2025-10-07T21:00:10.003178-04:00
+    // MediaMTX requires UTC time with Z suffix
+    // Simply use the built-in toIso8601String which produces the correct format
+    if (dateTime.isUtc) {
+      return dateTime.toIso8601String();
+    } else {
+      return dateTime.toUtc().toIso8601String();
+    }
+  }
+  
+  /// Converts a DateTime to RFC3339 format keeping local timezone
+  static String toRFC3339Local(DateTime dateTime) {
+    // Keep local time with timezone offset for recordings stored in local time
     final String year = dateTime.year.toString().padLeft(4, '0');
     final String month = dateTime.month.toString().padLeft(2, '0');
     final String day = dateTime.day.toString().padLeft(2, '0');
     final String hour = dateTime.hour.toString().padLeft(2, '0');
     final String minute = dateTime.minute.toString().padLeft(2, '0');
     final String second = dateTime.second.toString().padLeft(2, '0');
-    final String microsecond = dateTime.microsecond.toString().padLeft(6, '0');
     
     // Get timezone offset
     final Duration offset = dateTime.timeZoneOffset;
@@ -21,7 +30,7 @@ class DateUtils {
     final int offsetMinutes = (offset.inMinutes.abs() % 60);
     final String offsetString = '$offsetSign${offsetHours.toString().padLeft(2, '0')}:${offsetMinutes.toString().padLeft(2, '0')}';
     
-    return '$year-$month-${day}T$hour:$minute:$second.$microsecond$offsetString';
+    return '$year-$month-${day}T$hour:$minute:$second$offsetString';
   }
   
   /// Parses an RFC3339 string to DateTime

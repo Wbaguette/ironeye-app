@@ -58,14 +58,25 @@ class Config {
     }
   }
   
-  String buildPlaybackUrl({required String start, required String end}) {
-    final baseUrl = playbackUrl
-        .replaceAll('[start]', start)
-        .replaceAll('[end]', end);
-    
-    // Add duration parameter
-    final separator = baseUrl.contains('?') ? '&' : '?';
-    return '$baseUrl${separator}duration=60';
+  String buildListUrl({required String path, required String start, required String end}) {
+    final uri = Uri.parse('$playbackUrl/list');
+    final urlWithParams = uri.replace(queryParameters: {
+      'path': path,
+      'start': start,
+      'end': end,
+    });
+    return urlWithParams.toString();
+  }
+  
+  String buildGetUrl({required String path, required String start, required String duration, String format = 'mp4'}) {
+    final uri = Uri.parse('$playbackUrl/get');
+    final urlWithParams = uri.replace(queryParameters: {
+      'path': path,
+      'start': start,
+      'duration': duration,
+      'format': format,
+    });
+    return urlWithParams.toString();
   }
 }
 

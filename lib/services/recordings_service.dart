@@ -12,20 +12,20 @@ class RecordingsService {
   /// Fetches available recordings for a specific date
   static Future<List<Recording>> fetchRecordingsForDate(DateTime date) async {
     try {
-      // Convert date to RFC3339 format for the API
+      // Keep the date in local time since recordings are stored in local time on server
+      // Get start and end of the selected day in local time
       final startOfDay = date_utils.DateUtils.getStartOfDay(date);
       final endOfDay = date_utils.DateUtils.getEndOfDay(date);
       
-      final startRFC3339 = date_utils.DateUtils.toRFC3339(startOfDay);
-      final endRFC3339 = date_utils.DateUtils.toRFC3339(endOfDay);
+      // Convert to RFC3339 but keep local timezone
+      final startRFC3339 = date_utils.DateUtils.toRFC3339Local(startOfDay);
+      final endRFC3339 = date_utils.DateUtils.toRFC3339Local(endOfDay);
       
-      final encodedStart = Uri.encodeComponent(startRFC3339);
-      final encodedEnd = Uri.encodeComponent(endRFC3339);
-      
-      // Use the buildPlaybackUrl method from config with encoded parameters
-      final url = config.buildPlaybackUrl(
-        start: encodedStart,
-        end: encodedEnd,
+      // Use the buildListUrl method from config with raw RFC3339 strings
+      final url = config.buildListUrl(
+        path: 'ironeye',
+        start: startRFC3339,
+        end: endRFC3339,
       );
 
       final response = await http.get(
@@ -34,18 +34,44 @@ class RecordingsService {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException('Request timed out after 30 seconds');
+        },
       );
       
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
-        final recordings = jsonData.map((json) => Recording.fromJson(json)).toList();
+        
+        // Parse recordings with error handling for corrupted entries
+        final recordings = <Recording>[];
+        for (var json in jsonData) {
+          try {
+            recordings.add(Recording.fromJson(json));
+          } catch (e) {
+            await LogService.log(
+              level: LogLevel.warning,
+              category: LogCategory.recordings,
+              title: 'Skipped corrupted recording',
+              details: 'Failed to parse recording: $e',
+              metadata: {'json': json},
+            );
+          }
+        }
         
         await LogService.log(
           level: LogLevel.info,
           category: LogCategory.recordings,
           title: 'Recordings fetched successfully',
           details: 'Found ${recordings.length} recordings for ${date.toLocal().toString().split(' ')[0]}',
-          metadata: {'count': recordings.length, 'date': date.toIso8601String()},
+          metadata: {
+            'count': recordings.length,
+            'date': date.toIso8601String(),
+            'url': url,
+            'responseSize': response.body.length,
+            'firstRecording': jsonData.isNotEmpty ? jsonData.first : null,
+          },
         );
         
         return recordings;
@@ -63,7 +89,12 @@ class RecordingsService {
           category: LogCategory.recordings,
           title: 'Failed to fetch recordings',
           details: 'HTTP ${response.statusCode}',
-          metadata: {'statusCode': response.statusCode},
+          metadata: {
+            'statusCode': response.statusCode,
+            'url': url,
+            'responseBody': response.body,
+            'headers': response.headers,
+          },
         );
         throw Exception('Failed to fetch recordings: ${response.statusCode}');
       }
@@ -82,7 +113,7 @@ class RecordingsService {
   static Future<void> downloadRecording(Recording recording) async {
     try {
       final response = await http.get(
-        Uri.parse(recording.downloadUrl),
+        Uri.parse(recording.getDownloadUrl()),
         headers: {
           'Accept': 'application/octet-stream',
         },
@@ -133,9 +164,9 @@ class RecordingsService {
     );
     
     try {
-      final customUrl = recording.getCustomDownloadUrl(
+      final customUrl = recording.getDownloadUrl(
         offsetSeconds: offsetSeconds,
-        downloadDurationSeconds: durationSeconds,
+        customDuration: durationSeconds,
         format: 'mp4',
       );
       
@@ -196,6 +227,11 @@ class RecordingsService {
         metadata: {
           'fileName': fileName,
           'sizeBytes': response.bodyBytes.length,
+          'url': customUrl,
+          'offsetSeconds': offsetSeconds,
+          'durationSeconds': durationSeconds,
+          'statusCode': response.statusCode,
+          'contentType': response.headers['content-type'],
         },
       );
       
@@ -245,7 +281,7 @@ class Recording {
   final DateTime startTime;
   final DateTime endTime;
   final double durationSeconds;
-  final String downloadUrl;
+  final String path;
   final String format;
   
   const Recording({
@@ -253,15 +289,14 @@ class Recording {
     required this.startTime,
     required this.endTime,
     required this.durationSeconds,
-    required this.downloadUrl,
+    required this.path,
     required this.format,
   });
   
   /// Creates a Recording from JSON (API response)
   factory Recording.fromJson(Map<String, dynamic> json) {
-    // Parse the DateTime and ensure it's converted to local time
+    // Parse the DateTime - keep as local time since server stores in local time
     final parsedTime = DateTime.parse(json['start'] as String);
-    // If the parsed time is UTC, convert to local time
     final startTime = parsedTime.isUtc ? parsedTime.toLocal() : parsedTime;
     
     final duration = (json['duration'] as num).toDouble();
@@ -270,12 +305,17 @@ class Recording {
     // Generate a simple ID from the start time
     final id = startTime.millisecondsSinceEpoch.toString();
     
+    // Extract path from URL query parameters
+    final url = json['url'] as String;
+    final uri = Uri.parse(url);
+    final path = uri.queryParameters['path'] ?? 'ironeye';
+    
     return Recording(
       id: id,
       startTime: startTime,
       endTime: endTime,
       durationSeconds: duration,
-      downloadUrl: json['url'] as String,
+      path: path,
       format: 'mp4', // Default format since it's not provided in API
     );
   }
@@ -310,72 +350,37 @@ class Recording {
     }
   }
   
-  /// Generates streaming URL for video preview using the /get endpoint
-  String getStreamingUrl({String format = 'fmp4'}) {
-    // Extract base URL and path from the original downloadUrl
-    final uri = Uri.parse(downloadUrl);
-    final baseUrl = '${uri.scheme}://${uri.host}:${uri.port}';
-    String path = '';
-    
-    // Try to extract path from query parameters
-    if (uri.queryParameters.containsKey('path')) {
-      path = uri.queryParameters['path']!;
-    } else {
-      // If no path query param, use the path component or default
-      path = uri.path.replaceFirst('/', '');
-      if (path.isEmpty) {
-        path = 'ironeye'; // Default path based on your API calls
-      }
-    }
-    
-    // Convert start time to RFC3339 format (UTC for API)
-    final startTimeUtc = startTime.toUtc();
-    final startRFC3339 = startTimeUtc.toIso8601String();
-    
-    // Build the streaming URL with proper encoding
-    final encodedPath = Uri.encodeComponent(path);
-    final encodedStart = Uri.encodeComponent(startRFC3339);
-    final encodedDuration = Uri.encodeComponent(durationSeconds.toString());
-    final encodedFormat = Uri.encodeComponent(format);
-    
-    final streamingUrl = '$baseUrl/get?path=$encodedPath&start=$encodedStart&duration=$encodedDuration&format=$encodedFormat';
- 
-    return streamingUrl;
-  }
-  
-  /// Generates custom download URL with specific offset and duration
-  String getCustomDownloadUrl({
-    required double offsetSeconds,
-    required double downloadDurationSeconds,
-    String format = 'mp4'
+  /// Generates download URL using the /get endpoint
+  String getDownloadUrl({
+    double? offsetSeconds,
+    double? customDuration,
+    String format = 'mp4',
   }) {
-    // Extract base URL and path from the original downloadUrl
-    final uri = Uri.parse(downloadUrl);
-    final baseUrl = '${uri.scheme}://${uri.host}:${uri.port}';
-    String path = '';
+    // Calculate start time (add offset if provided)
+    // startTime is in local time, keep it that way for the server
+    final downloadStartTime = offsetSeconds != null 
+        ? startTime.add(Duration(milliseconds: (offsetSeconds * 1000).round()))
+        : startTime;
     
-    // Try to extract path from query parameters
-    if (uri.queryParameters.containsKey('path')) {
-      path = uri.queryParameters['path']!;
-    } else {
-      // If no path query param, use the path component or default
-      path = uri.path.replaceFirst('/', '');
-      if (path.isEmpty) {
-        path = 'ironeye'; // Default path based on your API calls
-      }
+    // Use toRFC3339Local to maintain local timezone for server
+    final startRFC3339 = date_utils.DateUtils.toRFC3339Local(downloadStartTime);
+    
+    // Calculate the maximum available duration from the download start time
+    final maxAvailableDuration = endTime.difference(downloadStartTime).inMilliseconds / 1000.0;
+    
+    // Use custom duration if provided, otherwise use full recording duration
+    // Clamp duration to not exceed what's available
+    var duration = customDuration ?? durationSeconds;
+    if (offsetSeconds != null && duration > maxAvailableDuration) {
+      duration = maxAvailableDuration;
     }
     
-    // Calculate the new start time by adding offset to the original start time
-    final customStartTime = startTime.add(Duration(milliseconds: (offsetSeconds * 1000).round()));
-    final customStartTimeUtc = customStartTime.toUtc();
-    final customStartRFC3339 = customStartTimeUtc.toIso8601String();
-    
-    // Build the custom download URL with proper encoding
-    final encodedPath = Uri.encodeComponent(path);
-    final encodedStart = Uri.encodeComponent(customStartRFC3339);
-    final encodedDuration = Uri.encodeComponent(downloadDurationSeconds.toString());
-    final encodedFormat = Uri.encodeComponent(format);
-    
-    return '$baseUrl/get?path=$encodedPath&start=$encodedStart&duration=$encodedDuration&format=$encodedFormat';
+    // Build the download URL using config (encoding handled by config)
+    return config.buildGetUrl(
+      path: path,
+      start: startRFC3339,
+      duration: duration.toString(),
+      format: format,
+    );
   }
 }

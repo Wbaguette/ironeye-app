@@ -294,6 +294,7 @@ class Recording {
     required this.format,
   });
 
+  // Deserialize
   factory Recording.fromJson(Map<String, dynamic> json) {
     final parsedTime = DateTime.parse(json['start'] as String);
     final startTime = parsedTime.isUtc ? parsedTime.toLocal() : parsedTime;

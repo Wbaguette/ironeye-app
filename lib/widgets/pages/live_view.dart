@@ -71,7 +71,6 @@ class _LiveViewPageState extends State<LiveViewPage> {
       );
     }
 
-    // Stream unavailable
     if (error.errorCode == 404 || error.errorCode == 503) {
       return const LiveViewError(
         type: LiveViewErrorType.streamNotAvailable,

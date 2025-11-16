@@ -72,9 +72,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(
-        const Duration(days: 7),
-      ), // 7 days back
+      firstDate: DateTime.now().subtract(const Duration(days: 7)),
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
@@ -129,7 +127,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
   }
 
   Future<void> _downloadRecording(Recording recording) async {
-    // Check if running on web platform
     if (kIsWeb) {
       _showWebNotSupportedDialog();
       return;
@@ -139,7 +136,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
         await _showCustomDownloadDialog(recording);
     if (downloadConfig == null || !mounted) return;
 
-    // Store context before async operations
     final scaffoldContext = context;
 
     try {
@@ -320,13 +316,11 @@ class _RecordingsPageState extends State<RecordingsPage> {
     Recording recording,
   ) async {
     DateTime startTime = recording.startTime;
-    DateTime endTime = recording.startTime.add(
-      const Duration(minutes: 1),
-    ); // Default to 1 minute duration
+    DateTime endTime = recording.startTime.add(const Duration(minutes: 1));
 
-    // Ensure end time doesn't exceed recording bounds
     final maxEndTime = recording.endTime;
 
+    // Ensure end time doesn't exceed recording bounds
     if (endTime.isAfter(maxEndTime)) {
       endTime = maxEndTime;
     }
@@ -339,9 +333,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
             // Ensure end time is always after start time
             if (endTime.isBefore(startTime) ||
                 endTime.isAtSameMomentAs(startTime)) {
-              endTime = startTime.add(
-                const Duration(seconds: 6),
-              ); // Minimum 6 seconds
+              endTime = startTime.add(const Duration(seconds: 6));
               if (endTime.isAfter(maxEndTime)) {
                 endTime = maxEndTime;
                 startTime = endTime.subtract(const Duration(seconds: 6));
@@ -358,7 +350,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Recording info
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -391,7 +382,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
 
                     const SizedBox(height: 16),
 
-                    // Time range display
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -414,7 +404,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
 
                     const SizedBox(height: 16),
 
-                    // Duration slider
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -457,7 +446,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
                                 Duration(seconds: values.end.round()),
                               );
 
-                              // Ensure minimum duration of 6 seconds
                               if (endTime.difference(startTime).inSeconds < 6) {
                                 endTime = startTime.add(
                                   const Duration(seconds: 6),
@@ -477,7 +465,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
 
                     const SizedBox(height: 16),
 
-                    // Duration display
                     Text(
                       'Duration: ${selectedDuration.inMinutes}m ${selectedDuration.inSeconds % 60}s',
                       style: TextStyle(
@@ -538,7 +525,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
       ),
       body: Column(
         children: [
-          // Info Banner
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
@@ -562,7 +548,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
             ),
           ),
 
-          // Date Selection Card
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: ListTile(
@@ -586,7 +571,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
             ),
           ),
 
-          // Content Area
           Expanded(child: _buildContent()),
         ],
       ),
@@ -688,7 +672,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with time and download button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

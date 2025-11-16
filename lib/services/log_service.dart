@@ -16,6 +16,7 @@ class LogEntry {
     this.metadata,
   });
 
+  // Deserialize
   factory LogEntry.fromJson(Map<String, dynamic> json) {
     try {
       return LogEntry(
@@ -44,6 +45,7 @@ class LogEntry {
   final String? details;
   final Map<String, dynamic>? metadata;
 
+  // Serialize
   Map<String, dynamic> toJson() => {
     'timestamp': timestamp.toIso8601String(),
     'level': level.index,
@@ -78,6 +80,7 @@ class LogService {
     String? details,
     Map<String, dynamic>? metadata,
   }) async {
+    // Attempt to grab log writing lock to avoid multiple writers writing over each other
     while (_writeLock != null && !_writeLock!.isCompleted) {
       await _writeLock!.future;
     }
@@ -135,16 +138,12 @@ class LogService {
     logs = logs.where((log) {
       // Filter by level
       if (level != null && log.level != level) return false;
-
       // Filter by category
       if (category != null && log.category != category) return false;
-
       // Filter by start date
       if (startDate != null && log.timestamp.isBefore(startDate)) return false;
-
       // Filter by end date
       if (endDate != null && log.timestamp.isAfter(endDate)) return false;
-
       // Filter by search query
       if (hasSearchQuery) {
         final matchesTitle = log.title.toLowerCase().contains(query);

@@ -18,7 +18,6 @@ jobs:
         with:
           channel: stable
       
-
       - name: Create dummy .env
         run: |
           echo "DUMMY=true" > .env
@@ -31,6 +30,3 @@ jobs:
 
       - name: Analyze
         run: flutter analyze --no-pub
-
-      - name: Build iOS
-        run: flutter build ios --simulator

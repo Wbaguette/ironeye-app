@@ -35,46 +35,75 @@ class RecordingsService {
           'Content-Type': 'application/json',
         },
       ).timeout(
-        const Duration(seconds: 30),
+        const Duration(seconds: 60),
         onTimeout: () {
-          throw TimeoutException('Request timed out after 30 seconds');
+          throw TimeoutException('Request timed out after 60 seconds');
         },
       );
       
       if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        
-        // Parse recordings with error handling for corrupted entries
-        final recordings = <Recording>[];
-        for (var json in jsonData) {
-          try {
-            recordings.add(Recording.fromJson(json));
-          } catch (e) {
-            await LogService.log(
-              level: LogLevel.warning,
-              category: LogCategory.recordings,
-              title: 'Skipped corrupted recording',
-              details: 'Failed to parse recording: $e',
-              metadata: {'json': json},
-            );
+        try {
+          final List<dynamic> jsonData = json.decode(response.body);
+          
+          await LogService.log(
+            level: LogLevel.info,
+            category: LogCategory.recordings,
+            title: 'Raw response received',
+            details: 'Received ${jsonData.length} recordings, response size: ${response.body.length} bytes',
+            metadata: {
+              'recordingCount': jsonData.length,
+              'responseSize': response.body.length,
+              'url': url,
+            },
+          );
+          
+          // Parse recordings with error handling for corrupted entries
+          final recordings = <Recording>[];
+          for (var json in jsonData) {
+            try {
+              recordings.add(Recording.fromJson(json));
+            } catch (e) {
+              await LogService.log(
+                level: LogLevel.warning,
+                category: LogCategory.recordings,
+                title: 'Skipped corrupted recording',
+                details: 'Failed to parse recording: $e',
+                metadata: {'json': json},
+              );
+            }
           }
+          
+          await LogService.log(
+            level: LogLevel.info,
+            category: LogCategory.recordings,
+            title: 'Recordings fetched successfully',
+            details: 'Found ${recordings.length} recordings for ${date.toLocal().toString().split(' ')[0]}',
+            metadata: {
+              'count': recordings.length,
+              'date': date.toIso8601String(),
+              'url': url,
+              'responseSize': response.body.length,
+              'firstRecording': jsonData.isNotEmpty ? jsonData.first : null,
+            },
+          );
+          
+          return recordings;
+        } catch (e) {
+          await LogService.log(
+            level: LogLevel.error,
+            category: LogCategory.recordings,
+            title: 'Failed to parse response',
+            details: 'Error parsing JSON response: $e',
+            metadata: {
+              'url': url,
+              'responseBody': response.body.length > 10000 
+                ? '${response.body.substring(0, 10000)}... (truncated, total: ${response.body.length} bytes)'
+                : response.body,
+              'statusCode': response.statusCode,
+            },
+          );
+          throw Exception('Failed to parse recordings response: $e');
         }
-        
-        await LogService.log(
-          level: LogLevel.info,
-          category: LogCategory.recordings,
-          title: 'Recordings fetched successfully',
-          details: 'Found ${recordings.length} recordings for ${date.toLocal().toString().split(' ')[0]}',
-          metadata: {
-            'count': recordings.length,
-            'date': date.toIso8601String(),
-            'url': url,
-            'responseSize': response.body.length,
-            'firstRecording': jsonData.isNotEmpty ? jsonData.first : null,
-          },
-        );
-        
-        return recordings;
       } else if (response.statusCode == 404) {
         await LogService.log(
           level: LogLevel.info,

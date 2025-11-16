@@ -10,11 +10,9 @@ import 'package:dashcamapp/services/log_service.dart';
 class RecordingsService {
   static Future<List<Recording>> fetchRecordingsForDate(DateTime date) async {
     try {
-      // Keep the date in local time since recordings are stored in local time on server
       final startOfDay = date_utils.DateUtils.getStartOfDay(date);
       final endOfDay = date_utils.DateUtils.getEndOfDay(date);
 
-      // Convert to RFC3339 (playback API requires this format) but keep local timezone
       final startRFC3339 = date_utils.DateUtils.toRFC3339Local(startOfDay);
       final endRFC3339 = date_utils.DateUtils.toRFC3339Local(endOfDay);
 
@@ -56,7 +54,6 @@ class RecordingsService {
             },
           );
 
-          // Parse recordings while keeping in mind corrupted recordings
           final recordings = <Recording>[];
           for (var json in jsonData) {
             try {
@@ -176,7 +173,6 @@ class RecordingsService {
         throw Exception('Invalid download URL');
       }
 
-      // Generate filename based on recording time and duration
       final startTime = recording.startTime.add(
         Duration(seconds: offsetSeconds.round()),
       );
@@ -217,7 +213,6 @@ class RecordingsService {
         throw Exception('Downloaded file is empty');
       }
 
-      // For iOS, save to temp directory and return the path
       final tempDir = Directory.systemTemp;
       final filePath = '${tempDir.path}/$fileName';
       final file = File(filePath);
@@ -310,7 +305,6 @@ class Recording {
 
     final id = startTime.millisecondsSinceEpoch.toString();
 
-    // Extract path from URL query parameters
     final url = json['url'] as String;
     final uri = Uri.parse(url);
     final path = uri.queryParameters['path'] ?? 'ironeye';
@@ -361,8 +355,6 @@ class Recording {
     final maxAvailableDuration =
         endTime.difference(downloadStartTime).inMilliseconds / 1000.0;
 
-    // Use custom duration if provided, otherwise use full recording duration
-    // Clamp duration to not exceed what's available
     var duration = customDuration ?? durationSeconds;
     if (offsetSeconds != null && duration > maxAvailableDuration) {
       duration = maxAvailableDuration;

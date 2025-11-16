@@ -23,7 +23,6 @@ final Color warningOrangeDark = Colors.orange.shade700;
 final Color warningOrangeDarker = Colors.orange.shade900;
 final Color warningOrangeIcon = Colors.orange.shade600;
 
-final Color infoBlue = Colors.blue;
 final Color infoBlueLight = Colors.blue.shade50;
 final Color infoBlueDark = Colors.blue.shade700;
 final Color infoBlueDarker = Colors.blue.shade800;

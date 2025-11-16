@@ -7,7 +7,6 @@ class DateUtils {
     final String minute = dateTime.minute.toString().padLeft(2, '0');
     final String second = dateTime.second.toString().padLeft(2, '0');
 
-    // Get timezone offset
     final Duration offset = dateTime.timeZoneOffset;
     final String offsetSign = offset.isNegative ? '-' : '+';
     final int offsetHours = offset.inHours.abs();

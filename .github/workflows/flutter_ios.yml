@@ -17,7 +17,12 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-     
+      
+
+      - name: Create dummy .env
+        run: |
+          echo "DUMMY=true" > .env
+
       - name: Get dependencies
         run: flutter pub get
 

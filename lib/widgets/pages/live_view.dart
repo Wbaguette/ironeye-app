@@ -10,21 +10,21 @@ enum LiveViewErrorType {
   streamNotAvailable,
   configurationError,
   webViewError,
-  unknown
+  unknown,
 }
 
 class LiveViewError {
-  final LiveViewErrorType type;
-  final String message;
-  final String? technicalDetails;
-  final bool isRetryable;
-  
   const LiveViewError({
     required this.type,
     required this.message,
     this.technicalDetails,
     required this.isRetryable,
   });
+
+  final LiveViewErrorType type;
+  final String message;
+  final String? technicalDetails;
+  final bool isRetryable;
 }
 
 class LiveViewPage extends StatefulWidget {
@@ -37,8 +37,8 @@ class LiveViewPage extends StatefulWidget {
 class _LiveViewPageState extends State<LiveViewPage> {
   late final WebViewController _controller;
   bool _isLoading = true;
-  bool _hasError = false; 
-  LiveViewError? _currentError; 
+  bool _hasError = false;
+  LiveViewError? _currentError;
 
   @override
   void initState() {
@@ -48,65 +48,70 @@ class _LiveViewPageState extends State<LiveViewPage> {
 
   String _cleanErrorMessage(String errorMessage) {
     if (errorMessage.isEmpty) return errorMessage;
-    
-    String cleaned = errorMessage.endsWith('.') 
+
+    String cleaned = errorMessage.endsWith('.')
         ? errorMessage.substring(0, errorMessage.length - 1)
         : errorMessage;
-    
+
     if (cleaned.isNotEmpty) {
       cleaned = cleaned[0].toUpperCase() + cleaned.substring(1);
     }
-    
+
     return cleaned;
   }
 
   LiveViewError _categorizeError(WebResourceError error) {
-    if (error.errorCode == -1009 || error.errorCode == -1001 || error.errorCode == -1004) {
+    if (error.errorCode == -1009 ||
+        error.errorCode == -1001 ||
+        error.errorCode == -1004) {
       return LiveViewError(
         type: LiveViewErrorType.networkConnection,
         message: "Can't connect to camera",
-        technicalDetails: "${error.description} (${error.errorCode})",
+        technicalDetails: '${error.description} (${error.errorCode})',
         isRetryable: true,
       );
     }
-    
-    // Authentication errors 
+
+    // Authentication errors
     if (error.errorCode == 401 || error.errorCode == 403) {
-      return LiveViewError(
+      return const LiveViewError(
         type: LiveViewErrorType.authentication,
-        message: "Camera access denied",
-        technicalDetails: "Check camera credentials",
+        message: 'Camera access denied',
+        technicalDetails: 'Check camera credentials',
         isRetryable: false,
       );
     }
-    
+
     // Stream unavailable
     if (error.errorCode == 404 || error.errorCode == 503) {
-      return LiveViewError(
+      return const LiveViewError(
         type: LiveViewErrorType.streamNotAvailable,
-        message: "Camera stream offline",
-        technicalDetails: "Stream may be temporarily unavailable",
+        message: 'Camera stream offline',
+        technicalDetails: 'Stream may be temporarily unavailable',
         isRetryable: true,
       );
     }
-    
+
     if (error.errorCode >= -999 && error.errorCode <= -100) {
       return LiveViewError(
         type: LiveViewErrorType.webViewError,
-        message: "Display error occurred",
-        technicalDetails: _cleanErrorMessage("${error.description} (${error.errorCode})"),
+        message: 'Display error occurred',
+        technicalDetails: _cleanErrorMessage(
+          '${error.description} (${error.errorCode})',
+        ),
         isRetryable: true,
       );
     }
-    
+
     return LiveViewError(
       type: LiveViewErrorType.unknown,
-      message: "Something went wrong",
-      technicalDetails: _cleanErrorMessage("${error.description} (${error.errorCode})"),
+      message: 'Something went wrong',
+      technicalDetails: _cleanErrorMessage(
+        '${error.description} (${error.errorCode})',
+      ),
       isRetryable: true,
     );
   }
-
 
   void _initializeWebView() {
     late final PlatformWebViewControllerCreationParams params;
@@ -119,8 +124,9 @@ class _LiveViewPageState extends State<LiveViewPage> {
       params = const PlatformWebViewControllerCreationParams();
     }
 
-    final WebViewController controller = WebViewController.fromPlatformCreationParams(params);
-    
+    final WebViewController controller =
+        WebViewController.fromPlatformCreationParams(params);
+
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -148,11 +154,9 @@ class _LiveViewPageState extends State<LiveViewPage> {
           },
         ),
       );
-      
-    controller.loadRequest(
-      Uri.parse(config.webrtcUrl),
-    );
-    
+
+    controller.loadRequest(Uri.parse(config.webrtcUrl));
+
     _controller = controller;
   }
 
@@ -162,14 +166,11 @@ class _LiveViewPageState extends State<LiveViewPage> {
       _hasError = false;
       _currentError = null;
     });
-    
+
     try {
       _controller.clearCache();
       _controller.clearLocalStorage();
-      _controller.loadRequest(
-        Uri.parse(config.webrtcUrl),
-      );
-      
+      _controller.loadRequest(Uri.parse(config.webrtcUrl));
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -224,7 +225,9 @@ class _LiveViewPageState extends State<LiveViewPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Network Diagnostics'),
-          content: const Text('Check your network connection and ensure the camera URL is accessible.'),
+          content: const Text(
+            'Check your network connection and ensure the camera URL is accessible.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -242,7 +245,9 @@ class _LiveViewPageState extends State<LiveViewPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Camera Settings'),
-          content: const Text('Please check camera credentials and permissions in the settings.'),
+          content: const Text(
+            'Please check camera credentials and permissions in the settings.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -260,7 +265,9 @@ class _LiveViewPageState extends State<LiveViewPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Camera Status'),
-          content: const Text('The camera may be offline or the stream is temporarily unavailable. Try again in a few moments.'),
+          content: const Text(
+            'The camera may be offline or the stream is temporarily unavailable. Try again in a few moments.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -289,14 +296,14 @@ class _LiveViewPageState extends State<LiveViewPage> {
             ),
           ],
         );
-        
+
       case LiveViewErrorType.authentication:
         return ElevatedButton.icon(
           onPressed: _showSettingsDialog,
           icon: const Icon(Icons.settings),
           label: const Text('Check Settings'),
         );
-        
+
       case LiveViewErrorType.streamNotAvailable:
         return Column(
           children: [
@@ -312,7 +319,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
             ),
           ],
         );
-        
+
       default:
         return ElevatedButton.icon(
           onPressed: error.isRetryable ? _refreshStream : null,
@@ -362,10 +369,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
       appBar: AppBar(
         title: const Text(
           'Live View',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
         ),
         centerTitle: false,
         actions: [
@@ -389,10 +393,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text(
-                    'Loading stream...',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  Text('Loading stream...', style: TextStyle(fontSize: 16)),
                 ],
               ),
             ),

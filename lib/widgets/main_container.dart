@@ -39,5 +39,3 @@ class _MainContainerState extends State<MainContainer> {
     );
   }
 }
-
-

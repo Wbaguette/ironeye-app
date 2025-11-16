@@ -13,7 +13,8 @@ class LogsPage extends StatefulWidget {
   State<LogsPage> createState() => _LogsPageState();
 }
 
-class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin {
+class _LogsPageState extends State<LogsPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<LogEntry> _logs = [];
   bool _isLoading = true;
@@ -76,7 +77,8 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
     try {
       final logsJson = await LogService.exportLogs();
       final tempDir = Directory.systemTemp;
-      final fileName = 'dashcam_logs_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.json';
+      final fileName =
+          'dashcam_logs_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.json';
       filePath = '${tempDir.path}/$fileName';
       final file = File(filePath);
 
@@ -84,9 +86,9 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
 
       if (mounted) {
         try {
-          await Share.shareXFiles(
-            [XFile(filePath, mimeType: 'application/json')],
-          );
+          await Share.shareXFiles([
+            XFile(filePath, mimeType: 'application/json'),
+          ]);
         } finally {
           // Clean up temp file after sharing
           try {
@@ -100,9 +102,9 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to export logs: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to export logs: $e')));
       }
     }
   }
@@ -112,7 +114,9 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Logs'),
-        content: const Text('Are you sure you want to clear all logs? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to clear all logs? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -131,9 +135,9 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
       await LogService.clearLogs();
       _loadLogs();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logs cleared')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Logs cleared')));
       }
     }
   }
@@ -144,10 +148,7 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
       appBar: AppBar(
         title: const Text(
           'Logs',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
         ),
         centerTitle: false,
         bottom: TabBar(
@@ -213,44 +214,38 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _logs.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.article_outlined,
-                              size: 64,
-                              color: textGreyLight,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No logs found',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: textGreyMedium,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Logs will appear here as you use the app',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: borderGrey,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.article_outlined,
+                          size: 64,
+                          color: textGreyLight,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadLogs,
-                        child: ListView.builder(
-                          itemCount: _logs.length,
-                          padding: const EdgeInsets.all(16),
-                          itemBuilder: (context, index) {
-                            return _LogCard(log: _logs[index]);
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'No logs found',
+                          style: TextStyle(fontSize: 18, color: textGreyMedium),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Logs will appear here as you use the app',
+                          style: TextStyle(fontSize: 14, color: borderGrey),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadLogs,
+                    child: ListView.builder(
+                      itemCount: _logs.length,
+                      padding: const EdgeInsets.all(16),
+                      itemBuilder: (context, index) {
+                        return _LogCard(log: _logs[index]);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -259,9 +254,9 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
 }
 
 class _LogCard extends StatefulWidget {
-  final LogEntry log;
-
   const _LogCard({required this.log});
+
+  final LogEntry log;
 
   @override
   State<_LogCard> createState() => _LogCardState();
@@ -299,7 +294,7 @@ class _LogCardState extends State<_LogCard> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getLevelColor().withOpacity(0.1),
+                      color: _getLevelColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -325,7 +320,9 @@ class _LogCardState extends State<_LogCard> {
                               ),
                             ),
                             Icon(
-                              _isExpanded ? Icons.expand_less : Icons.expand_more,
+                              _isExpanded
+                                  ? Icons.expand_less
+                                  : Icons.expand_more,
                               color: textGrey,
                             ),
                           ],
@@ -353,7 +350,9 @@ class _LogCardState extends State<_LogCard> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              DateFormat('MMM dd, HH:mm:ss').format(widget.log.timestamp),
+                              DateFormat(
+                                'MMM dd, HH:mm:ss',
+                              ).format(widget.log.timestamp),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: textGreyMedium,
@@ -376,14 +375,13 @@ class _LogCardState extends State<_LogCard> {
                   ),
                   child: Text(
                     widget.log.details!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: textGreyDarker,
-                    ),
+                    style: TextStyle(fontSize: 13, color: textGreyDarker),
                   ),
                 ),
               ],
-              if (_isExpanded && widget.log.metadata != null && widget.log.metadata!.isNotEmpty) ...[
+              if (_isExpanded &&
+                  widget.log.metadata != null &&
+                  widget.log.metadata!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -438,4 +436,3 @@ class _LogCardState extends State<_LogCard> {
     }
   }
 }
-

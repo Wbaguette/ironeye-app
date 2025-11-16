@@ -2,26 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum LogLevel {
-  info,
-  warning,
-  error,
-}
+enum LogLevel { info, warning, error }
 
-enum LogCategory {
-  recordings,
-  network,
-  system,
-}
+enum LogCategory { recordings, network, system }
 
 class LogEntry {
-  final DateTime timestamp;
-  final LogLevel level;
-  final LogCategory category;
-  final String title;
-  final String? details;
-  final Map<String, dynamic>? metadata;
-
   LogEntry({
     required this.timestamp,
     required this.level,
@@ -30,15 +15,6 @@ class LogEntry {
     this.details,
     this.metadata,
   });
-
-  Map<String, dynamic> toJson() => {
-        'timestamp': timestamp.toIso8601String(),
-        'level': level.index,
-        'category': category.index,
-        'title': title,
-        'details': details,
-        'metadata': metadata,
-  };
 
   factory LogEntry.fromJson(Map<String, dynamic> json) {
     try {
@@ -61,6 +37,22 @@ class LogEntry {
       );
     }
   }
+
+  final DateTime timestamp;
+  final LogLevel level;
+  final LogCategory category;
+  final String title;
+  final String? details;
+  final Map<String, dynamic>? metadata;
+
+  Map<String, dynamic> toJson() => {
+    'timestamp': timestamp.toIso8601String(),
+    'level': level.index,
+    'category': category.index,
+    'title': title,
+    'details': details,
+    'metadata': metadata,
+  };
 
   String get levelIcon {
     switch (level) {
@@ -101,9 +93,9 @@ class LogService {
     while (_writeLock != null && !_writeLock!.isCompleted) {
       await _writeLock!.future;
     }
-    
+
     _writeLock = Completer<void>();
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final logs = await getLogs();
@@ -123,7 +115,9 @@ class LogService {
         logs.removeRange(_maxLogs, logs.length);
       }
 
-      final cutoffDate = DateTime.now().subtract(Duration(days: _logRetentionDays));
+      final cutoffDate = DateTime.now().subtract(
+        const Duration(days: _logRetentionDays),
+      );
       logs.removeWhere((log) => log.timestamp.isBefore(cutoffDate));
 
       await _saveLogs(prefs, logs);
@@ -149,27 +143,28 @@ class LogService {
 
     final hasSearchQuery = searchQuery != null && searchQuery.isNotEmpty;
     final query = hasSearchQuery ? searchQuery.toLowerCase() : '';
-    
+
     logs = logs.where((log) {
       // Filter by level
       if (level != null && log.level != level) return false;
-      
+
       // Filter by category
       if (category != null && log.category != category) return false;
-      
+
       // Filter by start date
       if (startDate != null && log.timestamp.isBefore(startDate)) return false;
-      
+
       // Filter by end date
       if (endDate != null && log.timestamp.isAfter(endDate)) return false;
-      
+
       // Filter by search query
       if (hasSearchQuery) {
         final matchesTitle = log.title.toLowerCase().contains(query);
-        final matchesDetails = log.details?.toLowerCase().contains(query) ?? false;
+        final matchesDetails =
+            log.details?.toLowerCase().contains(query) ?? false;
         if (!matchesTitle && !matchesDetails) return false;
       }
-      
+
       return true;
     }).toList();
 
@@ -181,20 +176,23 @@ class LogService {
     await prefs.remove(_logsKey);
   }
 
-  static Future<void> _saveLogs(SharedPreferences prefs, List<LogEntry> logs) async {
+  static Future<void> _saveLogs(
+    SharedPreferences prefs,
+    List<LogEntry> logs,
+  ) async {
     final encoded = json.encode(logs.map((log) => log.toJson()).toList());
     await prefs.setString(_logsKey, encoded);
   }
 
   static Future<String> exportLogs() async {
     final logs = await getLogs();
-    
+
     final jsonData = {
       'exportDate': DateTime.now().toIso8601String(),
       'totalLogs': logs.length,
       'logs': logs.map((log) => log.toJson()).toList(),
     };
-    
+
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert(jsonData);
   }
@@ -207,7 +205,9 @@ class LogService {
       'info': logs.where((l) => l.level == LogLevel.info).length,
       'warning': logs.where((l) => l.level == LogLevel.warning).length,
       'error': logs.where((l) => l.level == LogLevel.error).length,
-      'recordings': logs.where((l) => l.category == LogCategory.recordings).length,
+      'recordings': logs
+          .where((l) => l.category == LogCategory.recordings)
+          .length,
       'network': logs.where((l) => l.category == LogCategory.network).length,
       'system': logs.where((l) => l.category == LogCategory.system).length,
     };

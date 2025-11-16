@@ -11,16 +11,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // if (!kIsWeb) {
-    // await FlutterDownloader.initialize(
-    //   debug: kDebugMode,
-    //   ignoreSsl: true,
-    // );
+  // await FlutterDownloader.initialize(
+  //   debug: kDebugMode,
+  //   ignoreSsl: true,
+  // );
   // }
-  
+
   try {
-    await dotenv.load(fileName: ".env");
-    final _ = config; 
-    
+    await dotenv.load();
+    final _ = config;
+
     // Log app startup
     await LogService.log(
       level: LogLevel.info,
@@ -29,7 +29,7 @@ void main() async {
       details: 'Ironeye Dashcam app initialized successfully',
       metadata: {'platform': defaultTargetPlatform.toString()},
     );
-    
+
     runApp(const IroneyeApp());
   } catch (e) {
     // Log configuration error (with try-catch to prevent infinite errors)
@@ -43,14 +43,17 @@ void main() async {
     } catch (_) {
       // Ignore logging errors during initialization failure
     }
-    
+
     if (kDebugMode) {
       runApp(ConfigErrorApp(error: e.toString()));
     } else {
       // Show user-friendly error in release builds
-      runApp(ConfigErrorApp(
-        error: 'Unable to start application. Please check your internet connection and try again.\n\nIf the problem persists, please contact support.',
-      ));
+      runApp(
+        const ConfigErrorApp(
+          error:
+              'Unable to start application. Please check your internet connection and try again.\n\nIf the problem persists, please contact support.',
+        ),
+      );
     }
   }
 }
@@ -65,7 +68,7 @@ class IroneyeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         textTheme: ThemeData.dark().textTheme.apply(
-          fontFamily: 'SF Pro Display', 
+          fontFamily: 'SF Pro Display',
         ),
       ),
       home: const MainContainer(),
@@ -74,9 +77,8 @@ class IroneyeApp extends StatelessWidget {
 }
 
 class ConfigErrorApp extends StatelessWidget {
-  final String error;
-  
   const ConfigErrorApp({super.key, required this.error});
+  final String error;
 
   @override
   Widget build(BuildContext context) {
@@ -92,11 +94,7 @@ class ConfigErrorApp extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: textWhite,
-                  size: 80,
-                ),
+                const Icon(Icons.error_outline, color: textWhite, size: 80),
                 const SizedBox(height: 20),
                 const Text(
                   'Configuration Error',
@@ -125,10 +123,7 @@ class ConfigErrorApp extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   'Please check your .env file and fix the configuration issues.',
-                  style: TextStyle(
-                    color: textWhite70,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: textWhite70, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               ],

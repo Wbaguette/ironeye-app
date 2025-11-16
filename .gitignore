@@ -13,6 +13,9 @@
 migrate_working_dir/
 .env
 
+# Static analysis reports
+/reports
+
 # IntelliJ related
 *.iml
 *.ipr

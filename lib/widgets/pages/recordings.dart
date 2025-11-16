@@ -20,8 +20,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
   bool _isLoading = false;
   bool _hasError = false;
   String? _errorMessage;
-  
-
 
   @override
   void initState() {
@@ -31,7 +29,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
 
   Future<void> _fetchRecordings() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = true;
       _hasError = false;
@@ -39,9 +37,11 @@ class _RecordingsPageState extends State<RecordingsPage> {
     });
 
     try {
-      var recordings = await RecordingsService.fetchRecordingsForDate(_selectedDate);
+      var recordings = await RecordingsService.fetchRecordingsForDate(
+        _selectedDate,
+      );
       if (!mounted) return;
-      
+
       // Cap recordings list to prevent memory issues
       if (recordings.length > 1000) {
         recordings = recordings.take(1000).toList();
@@ -52,14 +52,14 @@ class _RecordingsPageState extends State<RecordingsPage> {
           details: 'Recording list exceeded 1000 entries and was truncated',
         );
       }
-      
+
       setState(() {
         _recordings = recordings;
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      
+
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -72,15 +72,16 @@ class _RecordingsPageState extends State<RecordingsPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 7)), // 7 days back
+      firstDate: DateTime.now().subtract(
+        const Duration(days: 7),
+      ), // 7 days back
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: primaryBlue,
-              onPrimary: textWhite,
-            ),
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(primary: primaryBlue, onPrimary: textWhite),
           ),
           child: child!,
         );
@@ -133,33 +134,38 @@ class _RecordingsPageState extends State<RecordingsPage> {
       _showWebNotSupportedDialog();
       return;
     }
-    
-    final Map<String, dynamic>? downloadConfig = await _showCustomDownloadDialog(recording);
+
+    final Map<String, dynamic>? downloadConfig =
+        await _showCustomDownloadDialog(recording);
     if (downloadConfig == null || !mounted) return;
 
     // Store context before async operations
     final scaffoldContext = context;
-    
+
     try {
-      if (mounted) { 
+      if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (BuildContext context) {
-            final startTime = recording.startTime.add(Duration(seconds: downloadConfig['offsetSeconds'].round()));
-            final durationMinutes = (downloadConfig['durationSeconds'] / 60).toStringAsFixed(1);
-            final fileName = 'dashcam_${startTime.toLocal().toString().replaceAll(':', '-').replaceAll(' ', '_').substring(0, 19)}_${downloadConfig['durationSeconds'].round()}s.mp4';
-            
+            final startTime = recording.startTime.add(
+              Duration(seconds: downloadConfig['offsetSeconds'].round()),
+            );
+            final durationMinutes = (downloadConfig['durationSeconds'] / 60)
+                .toStringAsFixed(1);
+            final fileName =
+                'dashcam_${startTime.toLocal().toString().replaceAll(':', '-').replaceAll(' ', '_').substring(0, 19)}_${downloadConfig['durationSeconds'].round()}s.mp4';
+
             return AlertDialog(
-              title: Row(
+              title: const Row(
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  const SizedBox(width: 12),
-                  const Text('Downloading'),
+                  SizedBox(width: 12),
+                  Text('Downloading'),
                 ],
               ),
               content: Column(
@@ -218,34 +224,35 @@ class _RecordingsPageState extends State<RecordingsPage> {
           },
         );
       }
-      
+
       final double offsetSeconds = downloadConfig['offsetSeconds'];
       final double durationSeconds = downloadConfig['durationSeconds'];
-      
+
       final filePath = await RecordingsService.downloadCustomSegment(
         recording: recording,
         offsetSeconds: offsetSeconds,
         durationSeconds: durationSeconds,
       );
-      
+
+      if (!context.mounted) return;
+
       if (mounted) {
-        Navigator.of(scaffoldContext).pop(); 
-        
+        Navigator.of(scaffoldContext).pop();
+
         LogService.log(
           level: LogLevel.info,
           category: LogCategory.recordings,
           title: 'Recording shared',
-          details: 'User shared recording segment (${durationSeconds.round()}s)',
+          details:
+              'User shared recording segment (${durationSeconds.round()}s)',
           metadata: {
             'offsetSeconds': offsetSeconds,
             'durationSeconds': durationSeconds,
           },
         );
-        
+
         try {
-          await Share.shareXFiles(
-            [XFile(filePath, mimeType: 'video/mp4')],
-          );
+          await Share.shareXFiles([XFile(filePath, mimeType: 'video/mp4')]);
         } finally {
           // Clean up temp file after sharing
           try {
@@ -259,14 +266,19 @@ class _RecordingsPageState extends State<RecordingsPage> {
         }
       }
     } catch (e) {
+      if (!context.mounted) return;
+
       if (mounted) {
-        Navigator.of(scaffoldContext).pop(); 
-        
+        Navigator.of(scaffoldContext).pop();
+
         String errorMessage = e.toString().replaceFirst('Exception: ', '');
         if (errorMessage.contains('Custom download error:')) {
-          errorMessage = errorMessage.replaceFirst('Custom download error: ', '');
+          errorMessage = errorMessage.replaceFirst(
+            'Custom download error: ',
+            '',
+          );
         }
-        
+
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -287,7 +299,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    _downloadRecording(recording); 
+                    _downloadRecording(recording);
                   },
                   child: const Text('Retry'),
                 ),
@@ -298,28 +310,26 @@ class _RecordingsPageState extends State<RecordingsPage> {
       }
     }
   }
-  
 
-
-  
   @override
   void dispose() {
     super.dispose();
   }
 
-  
-  Future<Map<String, dynamic>?> _showCustomDownloadDialog(Recording recording) async {
+  Future<Map<String, dynamic>?> _showCustomDownloadDialog(
+    Recording recording,
+  ) async {
     DateTime startTime = recording.startTime;
-    DateTime endTime = recording.startTime.add(const Duration(minutes: 1)); // Default to 1 minute duration
-    
+    DateTime endTime = recording.startTime.add(
+      const Duration(minutes: 1),
+    ); // Default to 1 minute duration
+
     // Ensure end time doesn't exceed recording bounds
     final maxEndTime = recording.endTime;
-    
+
     if (endTime.isAfter(maxEndTime)) {
       endTime = maxEndTime;
     }
-    
-
 
     return await showDialog<Map<String, dynamic>>(
       context: context,
@@ -327,19 +337,22 @@ class _RecordingsPageState extends State<RecordingsPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             // Ensure end time is always after start time
-            if (endTime.isBefore(startTime) || endTime.isAtSameMomentAs(startTime)) {
-              endTime = startTime.add(const Duration(seconds: 6)); // Minimum 6 seconds
+            if (endTime.isBefore(startTime) ||
+                endTime.isAtSameMomentAs(startTime)) {
+              endTime = startTime.add(
+                const Duration(seconds: 6),
+              ); // Minimum 6 seconds
               if (endTime.isAfter(maxEndTime)) {
                 endTime = maxEndTime;
                 startTime = endTime.subtract(const Duration(seconds: 6));
               }
             }
-            
+
             final selectedDuration = endTime.difference(startTime);
-            
+
             return AlertDialog(
               title: const Text('Download'),
-              content: Container(
+              content: SizedBox(
                 width: double.maxFinite,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -359,7 +372,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                           Text(
                             'Original: ${DateFormat('HH:mm:ss').format(recording.startTime)} - ${DateFormat('HH:mm:ss').format(recording.endTime)}',
                             style: TextStyle(
-                              fontWeight: FontWeight.w500, 
+                              fontWeight: FontWeight.w500,
                               fontSize: 14,
                               color: infoBlueDarker,
                             ),
@@ -367,7 +380,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                           Text(
                             'Total Duration: ${recording.humanReadableDuration}',
                             style: TextStyle(
-                              color: infoBlueDark, 
+                              color: infoBlueDark,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -375,26 +388,32 @@ class _RecordingsPageState extends State<RecordingsPage> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Time range display
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Start: ${DateFormat('HH:mm:ss').format(startTime)}',
-                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
                         ),
                         Text(
                           'End: ${DateFormat('HH:mm:ss').format(endTime)}',
-                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Duration slider
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,27 +425,48 @@ class _RecordingsPageState extends State<RecordingsPage> {
                         const SizedBox(height: 8),
                         RangeSlider(
                           values: RangeValues(
-                            startTime.difference(recording.startTime).inSeconds.toDouble(),
-                            endTime.difference(recording.startTime).inSeconds.toDouble(),
+                            startTime
+                                .difference(recording.startTime)
+                                .inSeconds
+                                .toDouble(),
+                            endTime
+                                .difference(recording.startTime)
+                                .inSeconds
+                                .toDouble(),
                           ),
-                          min: 0,
-                          max: recording.endTime.difference(recording.startTime).inSeconds.toDouble(),
-                          divisions: (recording.endTime.difference(recording.startTime).inSeconds / 5).round(),
+                          max: recording.endTime
+                              .difference(recording.startTime)
+                              .inSeconds
+                              .toDouble(),
+                          divisions:
+                              (recording.endTime
+                                          .difference(recording.startTime)
+                                          .inSeconds /
+                                      5)
+                                  .round(),
                           labels: RangeLabels(
                             DateFormat('HH:mm:ss').format(startTime),
                             DateFormat('HH:mm:ss').format(endTime),
                           ),
                           onChanged: (RangeValues values) {
                             setState(() {
-                              startTime = recording.startTime.add(Duration(seconds: values.start.round()));
-                              endTime = recording.startTime.add(Duration(seconds: values.end.round()));
-                              
+                              startTime = recording.startTime.add(
+                                Duration(seconds: values.start.round()),
+                              );
+                              endTime = recording.startTime.add(
+                                Duration(seconds: values.end.round()),
+                              );
+
                               // Ensure minimum duration of 6 seconds
                               if (endTime.difference(startTime).inSeconds < 6) {
-                                endTime = startTime.add(const Duration(seconds: 6));
+                                endTime = startTime.add(
+                                  const Duration(seconds: 6),
+                                );
                                 if (endTime.isAfter(recording.endTime)) {
                                   endTime = recording.endTime;
-                                  startTime = endTime.subtract(const Duration(seconds: 6));
+                                  startTime = endTime.subtract(
+                                    const Duration(seconds: 6),
+                                  );
                                 }
                               }
                             });
@@ -434,9 +474,9 @@ class _RecordingsPageState extends State<RecordingsPage> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Duration display
                     Text(
                       'Duration: ${selectedDuration.inMinutes}m ${selectedDuration.inSeconds % 60}s',
@@ -452,13 +492,16 @@ class _RecordingsPageState extends State<RecordingsPage> {
               actionsAlignment: MainAxisAlignment.center,
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(null),
+                  onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context).pop({
-                    'offsetSeconds': startTime.difference(recording.startTime).inSeconds.toDouble(),
+                    'offsetSeconds': startTime
+                        .difference(recording.startTime)
+                        .inSeconds
+                        .toDouble(),
                     'durationSeconds': selectedDuration.inSeconds.toDouble(),
                   }),
                   icon: const Icon(Icons.download, size: 16),
@@ -475,8 +518,6 @@ class _RecordingsPageState extends State<RecordingsPage> {
       },
     );
   }
-  
-
 
   @override
   Widget build(BuildContext context) {
@@ -484,10 +525,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
       appBar: AppBar(
         title: const Text(
           'Recordings',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
         ),
         centerTitle: false,
         actions: [
@@ -512,25 +550,18 @@ class _RecordingsPageState extends State<RecordingsPage> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: infoBlueDark,
-                  size: 20,
-                ),
+                Icon(Icons.info_outline, color: infoBlueDark, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Recordings are automatically deleted after 7 days to save storage space.',
-                    style: TextStyle(
-                      color: infoBlueDarker,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: infoBlueDarker, fontSize: 14),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Date Selection Card
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -556,9 +587,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
           ),
 
           // Content Area
-          Expanded(
-            child: _buildContent(),
-          ),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
@@ -588,11 +617,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: errorRed,
-              ),
+              Icon(Icons.error_outline, size: 64, color: errorRed),
               const SizedBox(height: 16),
               const Text(
                 'Failed to load recordings',
@@ -623,11 +648,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.videocam_off,
-                size: 64,
-                color: textGreyLight,
-              ),
+              Icon(Icons.videocam_off, size: 64, color: textGreyLight),
               const SizedBox(height: 16),
               Text(
                 'No recordings found',
@@ -685,10 +706,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                       const SizedBox(height: 4),
                       Text(
                         recording.humanReadableDuration,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textGreyMedium,
-                        ),
+                        style: TextStyle(fontSize: 14, color: textGreyMedium),
                       ),
                     ],
                   ),
@@ -700,7 +718,10 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryBlue,
                     foregroundColor: textWhite,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ],

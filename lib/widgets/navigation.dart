@@ -1,22 +1,17 @@
 import 'package:dashcamapp/constants/colors.dart';
 import 'package:flutter/material.dart';
 
-enum PageIndex {
-  home,
-  liveView,
-  recordings,
-  logs,
-}
+enum PageIndex { home, liveView, recordings, logs }
 
 class Navigation extends StatelessWidget {
-  final PageIndex currentIndex;
-  final Function(int) onTap;
-
   const Navigation({
     super.key,
     required this.currentIndex,
     required this.onTap,
   });
+
+  final PageIndex currentIndex;
+  final Function(int) onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -38,36 +33,36 @@ class Navigation extends StatelessWidget {
         landscapeLayout: BottomNavigationBarLandscapeLayout.spread,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-      items: [
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Icon(Icons.home_sharp),
+        items: [
+          const BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(bottom: 4.0),
+              child: Icon(Icons.home_sharp),
+            ),
+            label: 'Home',
           ),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Icon(Icons.videocam),
+          const BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(bottom: 4.0),
+              child: Icon(Icons.videocam),
+            ),
+            label: 'Live View',
           ),
-          label: 'Live View',
-        ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Icon(Icons.play_circle),
+          const BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(bottom: 4.0),
+              child: Icon(Icons.play_circle),
+            ),
+            label: 'Recordings',
           ),
-          label: 'Recordings',
-        ),
-        BottomNavigationBarItem(
-          icon: Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Icon(Icons.receipt_long),
+          const BottomNavigationBarItem(
+            icon: Padding(
+              padding: EdgeInsets.only(bottom: 4.0),
+              child: Icon(Icons.receipt_long),
+            ),
+            label: 'Logs',
           ),
-          label: 'Logs',
-        ),
-      ],
+        ],
       ),
     );
   }

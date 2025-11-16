@@ -43,23 +43,23 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _initConnectivity() async {
     // Check initial connectivity
-    final ConnectivityResult connectivityResult = 
-        await Connectivity().checkConnectivity();
+    final ConnectivityResult connectivityResult = await Connectivity()
+        .checkConnectivity();
     _updateConnectionStatus(connectivityResult);
 
     // Cancel existing subscription if any
     await _connectivitySubscription?.cancel();
-    
+
     // Listen for connectivity changes
-    _connectivitySubscription = Connectivity()
-        .onConnectivityChanged
-        .listen(_updateConnectionStatus);
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      _updateConnectionStatus,
+    );
   }
 
   void _updateConnectionStatus(ConnectivityResult result) {
     final wasConnected = isConnectedToWiFi;
     final newConnected = result == ConnectivityResult.wifi;
-    
+
     setState(() {
       isConnectedToWiFi = newConnected;
       if (!newConnected) {
@@ -96,13 +96,13 @@ class _HomePageState extends State<HomePage> {
       // Note: In a real implementation, you would check the connected SSID
       // and verify it's the dashcam network. This requires platform-specific code.
       // For now, we'll use a simple placeholder check.
-      
+
       // You could also try to ping the dashcam's local IP or check if config endpoints respond
       // For example: http.get('http://192.168.1.1/api/status') with a short timeout
-      
+
       // Placeholder: Assume connected to dashcam if WiFi name contains "ironeye"
       // In production, implement actual connectivity test
-      
+
       if (mounted) {
         setState(() {
           // This is a placeholder - in production, get actual SSID from native code
@@ -123,12 +123,13 @@ class _HomePageState extends State<HomePage> {
     // Note: Opening WiFi settings requires platform-specific code
     // For iOS: app_settings package
     // For Android: android_intent_plus package
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please open your WiFi settings and connect to the dashcam network'),
-          duration: Duration(seconds: 4),
+          content: Text(
+            'Please open your WiFi settings and connect to the dashcam network',
+          ),
         ),
       );
     }
@@ -142,11 +143,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              Icon(
-                Icons.wifi_off,
-                size: 64,
-                color: errorRedDark,
-              ),
+              Icon(Icons.wifi_off, size: 64, color: errorRedDark),
               const SizedBox(height: 16),
               Text(
                 'Not Connected to WiFi',
@@ -160,10 +157,7 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'Please connect to your dashcam\'s WiFi network',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: errorRedDark,
-                ),
+                style: TextStyle(fontSize: 14, color: errorRedDark),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
@@ -173,7 +167,10 @@ class _HomePageState extends State<HomePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: errorRedDark,
                   foregroundColor: textWhite,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ],
@@ -189,11 +186,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              Icon(
-                Icons.check_circle,
-                size: 64,
-                color: successGreenDark,
-              ),
+              Icon(Icons.check_circle, size: 64, color: successGreenDark),
               const SizedBox(height: 16),
               Text(
                 'Connected to Dashcam',
@@ -207,15 +200,15 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'You can now access recordings and live view',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: successGreenDark,
-                ),
+                style: TextStyle(fontSize: 14, color: successGreenDark),
               ),
               if (connectedSSID != null) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: successGreenPale,
                     borderRadius: BorderRadius.circular(20),
@@ -269,10 +262,7 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Connected to WiFi, but not the dashcam network',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: warningOrangeDark,
-              ),
+              style: TextStyle(fontSize: 14, color: warningOrangeDark),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -282,7 +272,10 @@ class _HomePageState extends State<HomePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: warningOrangeDark,
                 foregroundColor: textWhite,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -297,10 +290,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text(
           'Dashcam Connection',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         centerTitle: false,
         automaticallyImplyLeading: false,
@@ -367,7 +357,11 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      Icon(Icons.tips_and_updates, size: 48, color: infoBlueDark),
+                      Icon(
+                        Icons.tips_and_updates,
+                        size: 48,
+                        color: infoBlueDark,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'Quick Access',
@@ -390,21 +384,30 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Icon(Icons.videocam, color: infoBlueDark),
                               const SizedBox(height: 4),
-                              const Text('Live View', style: TextStyle(fontSize: 12)),
+                              const Text(
+                                'Live View',
+                                style: TextStyle(fontSize: 12),
+                              ),
                             ],
                           ),
                           Column(
                             children: [
                               Icon(Icons.video_library, color: infoBlueDark),
                               const SizedBox(height: 4),
-                              const Text('Recordings', style: TextStyle(fontSize: 12)),
+                              const Text(
+                                'Recordings',
+                                style: TextStyle(fontSize: 12),
+                              ),
                             ],
                           ),
                           Column(
                             children: [
                               Icon(Icons.article, color: infoBlueDark),
                               const SizedBox(height: 4),
-                              const Text('Logs', style: TextStyle(fontSize: 12)),
+                              const Text(
+                                'Logs',
+                                style: TextStyle(fontSize: 12),
+                              ),
                             ],
                           ),
                         ],
@@ -457,10 +460,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: textGreyMedium,
-                ),
+                style: TextStyle(fontSize: 13, color: textGreyMedium),
               ),
             ],
           ),

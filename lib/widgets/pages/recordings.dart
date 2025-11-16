@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:dashcamapp/constants/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:dashcamapp/services/recordings_service.dart';
@@ -77,8 +78,8 @@ class _RecordingsPageState extends State<RecordingsPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
+              primary: primaryBlue,
+              onPrimary: textWhite,
             ),
           ),
           child: child!,
@@ -107,7 +108,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.orange.shade600),
+              Icon(Icons.info_outline, color: warningOrangeIcon),
               const SizedBox(width: 8),
               const Text('Not Available on Web'),
             ],
@@ -172,33 +173,33 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.schedule, size: 16, color: Colors.grey.shade600),
+                      Icon(Icons.schedule, size: 16, color: textGreyMedium),
                       const SizedBox(width: 8),
                       Text(
                         'Start: ${DateFormat('HH:mm:ss').format(startTime)}',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                        style: TextStyle(color: textGreyMedium, fontSize: 14),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.timer, size: 16, color: Colors.grey.shade600),
+                      Icon(Icons.timer, size: 16, color: textGreyMedium),
                       const SizedBox(width: 8),
                       Text(
                         'Duration: $durationMinutes minutes',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                        style: TextStyle(color: textGreyMedium, fontSize: 14),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.video_file, size: 16, color: Colors.grey.shade600),
+                      Icon(Icons.video_file, size: 16, color: textGreyMedium),
                       const SizedBox(width: 8),
                       Text(
                         'Format: MP4',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                        style: TextStyle(color: textGreyMedium, fontSize: 14),
                       ),
                     ],
                   ),
@@ -206,7 +207,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   Text(
                     'File: $fileName',
                     style: TextStyle(
-                      color: Colors.blue.shade700,
+                      color: infoBlueDark,
                       fontSize: 12,
                       fontFamily: 'monospace',
                     ),
@@ -272,7 +273,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.error, color: Colors.red.shade600),
+                  Icon(Icons.error, color: errorRedIcon),
                   const SizedBox(width: 8),
                   const Text('Download Failed'),
                 ],
@@ -348,8 +349,8 @@ class _RecordingsPageState extends State<RecordingsPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        border: Border.all(color: Colors.blue.shade200),
+                        color: infoBlueLight,
+                        border: Border.all(color: infoBlueBorder),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -360,13 +361,13 @@ class _RecordingsPageState extends State<RecordingsPage> {
                             style: TextStyle(
                               fontWeight: FontWeight.w500, 
                               fontSize: 14,
-                              color: Colors.blue.shade800,
+                              color: infoBlueDarker,
                             ),
                           ),
                           Text(
                             'Total Duration: ${recording.humanReadableDuration}',
                             style: TextStyle(
-                              color: Colors.blue.shade700, 
+                              color: infoBlueDark, 
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -441,7 +442,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                       'Duration: ${selectedDuration.inMinutes}m ${selectedDuration.inSeconds % 60}s',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Colors.blue.shade700,
+                        color: infoBlueDark,
                         fontSize: 16,
                       ),
                     ),
@@ -463,8 +464,8 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   icon: const Icon(Icons.download, size: 16),
                   label: const Text('Download'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
+                    backgroundColor: primaryBlue,
+                    foregroundColor: textWhite,
                   ),
                 ),
               ],
@@ -505,15 +506,15 @@ class _RecordingsPageState extends State<RecordingsPage> {
             padding: const EdgeInsets.all(16.0),
             margin: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              border: Border.all(color: Colors.blue.shade200),
+              color: infoBlueLight,
+              border: Border.all(color: infoBlueBorder),
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.info_outline,
-                  color: Colors.blue.shade700,
+                  color: infoBlueDark,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -521,7 +522,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   child: Text(
                     'Recordings are automatically deleted after 7 days to save storage space.',
                     style: TextStyle(
-                      color: Colors.blue.shade800,
+                      color: infoBlueDarker,
                       fontSize: 14,
                     ),
                   ),
@@ -534,12 +535,12 @@ class _RecordingsPageState extends State<RecordingsPage> {
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: ListTile(
-              leading: const Icon(Icons.calendar_month, color: Colors.blue),
+              leading: const Icon(Icons.calendar_month, color: primaryBlue),
               title: Text(
                 'View recordings from',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
+                  color: textGreyDark,
                 ),
               ),
               subtitle: Text(
@@ -587,10 +588,10 @@ class _RecordingsPageState extends State<RecordingsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.error_outline,
                 size: 64,
-                color: Colors.red,
+                color: errorRed,
               ),
               const SizedBox(height: 16),
               const Text(
@@ -600,7 +601,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
               const SizedBox(height: 8),
               Text(
                 _errorMessage ?? 'Unknown error occurred',
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: textGrey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -625,7 +626,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
               Icon(
                 Icons.videocam_off,
                 size: 64,
-                color: Colors.grey.shade400,
+                color: textGreyLight,
               ),
               const SizedBox(height: 16),
               Text(
@@ -633,7 +634,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
+                  color: textGreyMedium,
                 ),
               ),
               const SizedBox(height: 24),
@@ -686,7 +687,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
                         recording.humanReadableDuration,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade600,
+                          color: textGreyMedium,
                         ),
                       ),
                     ],
@@ -697,8 +698,8 @@ class _RecordingsPageState extends State<RecordingsPage> {
                   icon: const Icon(Icons.download, size: 18),
                   label: const Text('Download'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
+                    backgroundColor: primaryBlue,
+                    foregroundColor: textWhite,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                 ),

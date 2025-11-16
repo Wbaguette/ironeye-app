@@ -1,4 +1,5 @@
 import 'package:dashcamapp/config.dart';
+import 'package:dashcamapp/constants/colors.dart';
 import 'package:dashcamapp/widgets/main_container.dart';
 import 'package:dashcamapp/services/log_service.dart';
 import 'package:flutter/foundation.dart';
@@ -84,7 +85,7 @@ class ConfigErrorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: Scaffold(
-        backgroundColor: Colors.red.shade900,
+        backgroundColor: errorRed,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
@@ -93,14 +94,14 @@ class ConfigErrorApp extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.error_outline,
-                  color: Colors.white,
+                  color: textWhite,
                   size: 80,
                 ),
                 const SizedBox(height: 20),
                 const Text(
                   'Configuration Error',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textWhite,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -109,23 +110,23 @@ class ConfigErrorApp extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black54,
+                    color: textBlack54,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     error,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: textWhite,
                       fontSize: 14,
                       fontFamily: 'monospace',
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Please check your .env file and fix the configuration issues.',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: textWhite70,
                     fontSize: 16,
                   ),
                   textAlign: TextAlign.center,

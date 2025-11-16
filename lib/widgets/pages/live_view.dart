@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dashcamapp/constants/colors.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:dashcamapp/config.dart';
@@ -203,17 +204,17 @@ class _LiveViewPageState extends State<LiveViewPage> {
   Color _getErrorColor(LiveViewErrorType type) {
     switch (type) {
       case LiveViewErrorType.networkConnection:
-        return Colors.orange;
+        return warningOrange;
       case LiveViewErrorType.authentication:
-        return Colors.red;
+        return errorRed;
       case LiveViewErrorType.streamNotAvailable:
-        return Colors.amber;
+        return warningOrange;
       case LiveViewErrorType.configurationError:
-        return Colors.purple;
+        return errorRed;
       case LiveViewErrorType.webViewError:
-        return Colors.blue;
+        return primaryBlue;
       case LiveViewErrorType.unknown:
-        return Colors.grey;
+        return textGrey;
     }
   }
 
@@ -343,7 +344,7 @@ class _LiveViewPageState extends State<LiveViewPage> {
               const SizedBox(height: 12),
               Text(
                 error.technicalDetails!,
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: textGrey),
                 textAlign: TextAlign.center,
               ),
             ],

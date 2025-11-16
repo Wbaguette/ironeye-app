@@ -38,32 +38,20 @@ class LogEntry {
         'title': title,
         'details': details,
         'metadata': metadata,
-      };
+  };
 
   factory LogEntry.fromJson(Map<String, dynamic> json) {
     try {
-      // Handle old category indices from previous 5-category system
-      final categoryIndex = json['category'] as int;
-      final category = categoryIndex < LogCategory.values.length
-          ? LogCategory.values[categoryIndex]
-          : LogCategory.system; // Default to system for old/invalid categories
-      
-      // Safely parse level with bounds checking
-      final levelIndex = json['level'] as int;
-      final level = levelIndex >= 0 && levelIndex < LogLevel.values.length
-          ? LogLevel.values[levelIndex]
-          : LogLevel.info; // Default to info for invalid levels
-      
       return LogEntry(
         timestamp: DateTime.parse(json['timestamp'] as String),
-        level: level,
-        category: category,
+        level: LogLevel.values[json['level'] as int],
+        category: LogCategory.values[json['category'] as int],
         title: json['title'] as String,
         details: json['details'] as String?,
         metadata: json['metadata'] as Map<String, dynamic>?,
       );
     } catch (e) {
-      // Fallback entry for corrupted data
+      // Return a fallback entry if parsing fails
       return LogEntry(
         timestamp: DateTime.now(),
         level: LogLevel.error,
@@ -110,12 +98,10 @@ class LogService {
     String? details,
     Map<String, dynamic>? metadata,
   }) async {
-    // Wait for any pending writes to complete
     while (_writeLock != null && !_writeLock!.isCompleted) {
       await _writeLock!.future;
     }
     
-    // Create new lock for this write operation
     _writeLock = Completer<void>();
     
     try {
@@ -133,12 +119,10 @@ class LogService {
 
       logs.insert(0, newLog);
 
-      // Keep only recent logs
       if (logs.length > _maxLogs) {
         logs.removeRange(_maxLogs, logs.length);
       }
 
-      // Remove logs older than retention period
       final cutoffDate = DateTime.now().subtract(Duration(days: _logRetentionDays));
       logs.removeWhere((log) => log.timestamp.isBefore(cutoffDate));
 
@@ -163,7 +147,6 @@ class LogService {
     final List<dynamic> decoded = json.decode(logsJson);
     var logs = decoded.map((json) => LogEntry.fromJson(json)).toList();
 
-    // Apply all filters in a single pass for better performance
     final hasSearchQuery = searchQuery != null && searchQuery.isNotEmpty;
     final query = hasSearchQuery ? searchQuery.toLowerCase() : '';
     
@@ -206,7 +189,6 @@ class LogService {
   static Future<String> exportLogs() async {
     final logs = await getLogs();
     
-    // Export as JSON
     final jsonData = {
       'exportDate': DateTime.now().toIso8601String(),
       'totalLogs': logs.length,

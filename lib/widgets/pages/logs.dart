@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:dashcamapp/constants/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:dashcamapp/services/log_service.dart';
@@ -119,7 +120,7 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: errorRed),
             child: const Text('Clear'),
           ),
         ],
@@ -219,14 +220,14 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
                             Icon(
                               Icons.article_outlined,
                               size: 64,
-                              color: Colors.grey.shade400,
+                              color: textGreyLight,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No logs found',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.grey.shade600,
+                                color: textGreyMedium,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -234,7 +235,7 @@ class _LogsPageState extends State<LogsPage> with SingleTickerProviderStateMixin
                               'Logs will appear here as you use the app',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey.shade500,
+                                color: borderGrey,
                               ),
                             ),
                           ],
@@ -272,11 +273,11 @@ class _LogCardState extends State<_LogCard> {
   Color _getLevelColor() {
     switch (widget.log.level) {
       case LogLevel.info:
-        return Colors.green;
+        return successGreen;
       case LogLevel.warning:
-        return Colors.orange;
+        return warningOrange;
       case LogLevel.error:
-        return Colors.red;
+        return errorRed;
     }
   }
 
@@ -325,7 +326,7 @@ class _LogCardState extends State<_LogCard> {
                             ),
                             Icon(
                               _isExpanded ? Icons.expand_less : Icons.expand_more,
-                              color: Colors.grey,
+                              color: textGrey,
                             ),
                           ],
                         ),
@@ -338,14 +339,14 @@ class _LogCardState extends State<_LogCard> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
+                                color: bgGreyPale,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 widget.log.categoryName,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey.shade700,
+                                  color: textGreyDark,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -355,7 +356,7 @@ class _LogCardState extends State<_LogCard> {
                               DateFormat('MMM dd, HH:mm:ss').format(widget.log.timestamp),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: textGreyMedium,
                               ),
                             ),
                           ],
@@ -370,14 +371,14 @@ class _LogCardState extends State<_LogCard> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: bgGreyLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     widget.log.details!,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade800,
+                      color: textGreyDarker,
                     ),
                   ),
                 ),
@@ -387,7 +388,7 @@ class _LogCardState extends State<_LogCard> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: infoBlueLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -398,7 +399,7 @@ class _LogCardState extends State<_LogCard> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade900,
+                          color: infoBlueDarkest,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -409,7 +410,7 @@ class _LogCardState extends State<_LogCard> {
                             '${entry.key}: ${entry.value}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.blue.shade800,
+                              color: infoBlueDarker,
                               fontFamily: 'monospace',
                             ),
                           ),

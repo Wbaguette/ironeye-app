@@ -31,7 +31,7 @@ class Navigation extends StatelessWidget {
         backgroundColor: bgBlack,
         iconSize: 22.0,
         selectedItemColor: selectedItemColor,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: textGrey,
         unselectedFontSize: 11.0,
         selectedFontSize: 11.0,
         enableFeedback: false,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dashcamapp/constants/colors.dart';
 import 'package:dashcamapp/services/log_service.dart';
 import 'dart:async';
 
@@ -136,7 +137,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildConnectionCard() {
     if (!isConnectedToWiFi) {
       return Card(
-        color: Colors.red.shade50,
+        color: errorRedLight,
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -144,7 +145,7 @@ class _HomePageState extends State<HomePage> {
               Icon(
                 Icons.wifi_off,
                 size: 64,
-                color: Colors.red.shade700,
+                color: errorRedDark,
               ),
               const SizedBox(height: 16),
               Text(
@@ -152,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.red.shade900,
+                  color: errorRed,
                 ),
               ),
               const SizedBox(height: 8),
@@ -161,7 +162,7 @@ class _HomePageState extends State<HomePage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.red.shade700,
+                  color: errorRedDark,
                 ),
               ),
               const SizedBox(height: 16),
@@ -170,8 +171,8 @@ class _HomePageState extends State<HomePage> {
                 icon: const Icon(Icons.settings),
                 label: const Text('Open WiFi Settings'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade700,
-                  foregroundColor: Colors.white,
+                  backgroundColor: errorRedDark,
+                  foregroundColor: textWhite,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ),
@@ -183,7 +184,7 @@ class _HomePageState extends State<HomePage> {
 
     if (isConnectedToDashcam) {
       return Card(
-        color: Colors.green.shade50,
+        color: successGreenLight,
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -191,7 +192,7 @@ class _HomePageState extends State<HomePage> {
               Icon(
                 Icons.check_circle,
                 size: 64,
-                color: Colors.green.shade700,
+                color: successGreenDark,
               ),
               const SizedBox(height: 16),
               Text(
@@ -199,7 +200,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green.shade900,
+                  color: successGreenDarker,
                 ),
               ),
               const SizedBox(height: 8),
@@ -208,7 +209,7 @@ class _HomePageState extends State<HomePage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.green.shade700,
+                  color: successGreenDark,
                 ),
               ),
               if (connectedSSID != null) ...[
@@ -216,21 +217,21 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade100,
+                    color: successGreenPale,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.green.shade300),
+                    border: Border.all(color: successGreenBorder),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.wifi, size: 16, color: Colors.green.shade700),
+                      Icon(Icons.wifi, size: 16, color: successGreenDark),
                       const SizedBox(width: 8),
                       Text(
                         connectedSSID!,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.green.shade900,
+                          color: successGreenDarker,
                         ),
                       ),
                     ],
@@ -245,7 +246,7 @@ class _HomePageState extends State<HomePage> {
 
     // Connected to WiFi but not dashcam
     return Card(
-      color: Colors.orange.shade50,
+      color: warningOrangeLight,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -253,7 +254,7 @@ class _HomePageState extends State<HomePage> {
             Icon(
               Icons.wifi_tethering_error,
               size: 64,
-              color: Colors.orange.shade700,
+              color: warningOrangeDark,
             ),
             const SizedBox(height: 16),
             Text(
@@ -261,7 +262,7 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange.shade900,
+                color: warningOrangeDarker,
               ),
             ),
             const SizedBox(height: 8),
@@ -270,7 +271,7 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.orange.shade700,
+                color: warningOrangeDark,
               ),
             ),
             const SizedBox(height: 16),
@@ -279,8 +280,8 @@ class _HomePageState extends State<HomePage> {
               icon: const Icon(Icons.router),
               label: const Text('Switch to Dashcam Network'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: warningOrangeDark,
+                foregroundColor: textWhite,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
@@ -319,7 +320,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue.shade700),
+                        Icon(Icons.info_outline, color: infoBlueDark),
                         const SizedBox(width: 8),
                         const Text(
                           'How to Connect',
@@ -361,19 +362,19 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 24),
             if (isConnectedToDashcam) ...[
               Card(
-                color: Colors.blue.shade50,
+                color: infoBlueLight,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      Icon(Icons.tips_and_updates, size: 48, color: Colors.blue.shade700),
+                      Icon(Icons.tips_and_updates, size: 48, color: infoBlueDark),
                       const SizedBox(height: 12),
                       Text(
                         'Quick Access',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade900,
+                          color: infoBlueDarkest,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -387,21 +388,21 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Column(
                             children: [
-                              Icon(Icons.videocam, color: Colors.blue.shade700),
+                              Icon(Icons.videocam, color: infoBlueDark),
                               const SizedBox(height: 4),
                               const Text('Live View', style: TextStyle(fontSize: 12)),
                             ],
                           ),
                           Column(
                             children: [
-                              Icon(Icons.video_library, color: Colors.blue.shade700),
+                              Icon(Icons.video_library, color: infoBlueDark),
                               const SizedBox(height: 4),
                               const Text('Recordings', style: TextStyle(fontSize: 12)),
                             ],
                           ),
                           Column(
                             children: [
-                              Icon(Icons.article, color: Colors.blue.shade700),
+                              Icon(Icons.article, color: infoBlueDark),
                               const SizedBox(height: 4),
                               const Text('Logs', style: TextStyle(fontSize: 12)),
                             ],
@@ -427,14 +428,14 @@ class _HomePageState extends State<HomePage> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: Colors.blue.shade700,
+            color: infoBlueDark,
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Text(
               '$step',
               style: const TextStyle(
-                color: Colors.white,
+                color: textWhite,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -458,7 +459,7 @@ class _HomePageState extends State<HomePage> {
                 description,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey.shade600,
+                  color: textGreyMedium,
                 ),
               ),
             ],
